@@ -1,0 +1,24 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}{{ grade.label }} — Results{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h1 class="panel-title">Mission complete</h1>
+
+  <p class="score-big">{{ score }}<span class="score-of"> / {{ total_possible }}</span></p>
+  <p class="panel-meta">Best answer chosen on {{ best_count }} of {{ total }} questions</p>
+
+  <div class="takeaways">
+    <h2 class="takeaway-head">Remember these three</h2>
+    <ol class="takeaway-list">
+      <li>If an offer sounds too good to be true, it probably is.</li>
+      <li>Never share your password, your full name, or where you live.</li>
+      <li>If something feels off — or you already clicked — tell a grown-up right away. You won't be in trouble for telling.</li>
+    </ol>
+  </div>
+
+  <a class="btn btn-go" href="{% url 'cybergame:start_grade' grade.number %}">Play again</a>
+  <a class="btn-quiet" href="{% url 'cybergame:grade_select' %}">Back to grades</a>
+</div>
+{% endblock %}

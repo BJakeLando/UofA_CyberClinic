@@ -1,0 +1,13 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}{{ grade.label }} — Cyber Squad{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <h1 class="panel-title">{{ grade.label }}</h1>
+  {% if grade.intro %}<p class="panel-intro">{{ grade.intro }}</p>{% endif %}
+  <p class="panel-meta">{{ total }} questions</p>
+  <a class="btn btn-go" href="{% url 'cybergame:question' grade.number 0 %}">Start</a>
+  <a class="btn-quiet" href="{% url 'cybergame:grade_select' %}">Pick a different grade</a>
+</div>
+{% endblock %}

@@ -1,0 +1,353 @@
+:root {
+  --ink: #17224a;
+  --ink-soft: #46527f;
+  --paper: #eef3ff;
+  --card: #ffffff;
+  --sun: #ffc93c;
+  --grass: #1faa63;
+  --coral: #ff6b5a;
+  --sky: #3d8ee0;
+  --grape: #6c5ce7;
+  --radius: 18px;
+  --shadow: 0 6px 0 rgba(23, 34, 74, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Fredoka", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  font-size: 20px;
+  line-height: 1.45;
+  min-height: 100vh;
+}
+
+.shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+/* ---------- home ---------- */
+
+.page-home {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(108, 92, 231, 0.16), transparent 42%),
+    radial-gradient(circle at 88% 4%, rgba(255, 201, 60, 0.28), transparent 38%),
+    var(--paper);
+}
+
+.home-head {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.home-kicker {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.home-title {
+  margin: 4px 0 8px;
+  font-size: clamp(44px, 9vw, 72px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.home-sub {
+  margin: 0;
+  font-size: 22px;
+  color: var(--ink-soft);
+}
+
+.grade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 18px;
+}
+
+.grade-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 150px;
+  padding: 18px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: #fff;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease;
+}
+
+.grade-card:hover,
+.grade-card:focus-visible {
+  transform: translateY(-3px);
+}
+
+.grade-3 { background: var(--sky); }
+.grade-4 { background: var(--grass); }
+.grade-5 { background: var(--grape); }
+.grade-6 { background: #e2681f; }
+
+.grade-num {
+  font-size: 56px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.grade-label {
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* ---------- panels ---------- */
+
+.panel {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36px 28px;
+  text-align: center;
+}
+
+.panel-title {
+  margin: 0 0 10px;
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.panel-intro {
+  margin: 0 auto 14px;
+  max-width: 46ch;
+  color: var(--ink-soft);
+}
+
+.panel-meta {
+  margin: 0 0 24px;
+  color: var(--ink-soft);
+  font-size: 18px;
+}
+
+/* ---------- question ---------- */
+
+.trackbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.track-score {
+  background: var(--sun);
+  color: var(--ink);
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 999px;
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 26px 24px;
+  margin-bottom: 20px;
+}
+
+.stage-tag {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--grape);
+}
+
+.prompt {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.4;
+}
+
+.prompt-img {
+  display: block;
+  max-width: 100%;
+  margin-top: 16px;
+  border-radius: 12px;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.choice {
+  font: inherit;
+  font-size: 21px;
+  text-align: left;
+  padding: 20px 22px;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.choice:hover,
+.choice:focus-visible {
+  background: #fffaea;
+  transform: translateY(-2px);
+}
+
+/* ---------- feedback ---------- */
+
+.feedback {
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+
+.feedback-best { background: var(--grass); }
+.feedback-ok   { background: var(--sky); }
+.feedback-try  { background: var(--coral); }
+
+.feedback-head {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.feedback-body {
+  margin: 0;
+  font-size: 20px;
+}
+
+.recap {
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recap-item {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 18px;
+  color: var(--ink-soft);
+}
+
+.recap-best {
+  border-left: 8px solid var(--grass);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.recap-picked {
+  outline: 3px solid var(--ink);
+}
+
+/* ---------- buttons ---------- */
+
+.btn {
+  display: inline-block;
+  font-size: 22px;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 16px 34px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.btn-go {
+  background: var(--sun);
+  color: var(--ink);
+}
+
+.btn-go:hover,
+.btn-go:focus-visible {
+  transform: translateY(-2px);
+}
+
+.btn-quiet {
+  display: block;
+  margin-top: 18px;
+  color: var(--ink-soft);
+  font-size: 18px;
+}
+
+/* ---------- results ---------- */
+
+.score-big {
+  margin: 10px 0 2px;
+  font-size: 76px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-of {
+  font-size: 30px;
+  color: var(--ink-soft);
+}
+
+.takeaways {
+  text-align: left;
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  margin: 26px 0;
+}
+
+.takeaway-head {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.takeaway-list {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.takeaway-list li {
+  margin-bottom: 10px;
+  font-size: 19px;
+}
+
+/* ---------- focus + motion ---------- */
+
+a:focus-visible,
+button:focus-visible {
+  outline: 4px solid var(--grape);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media (max-width: 480px) {
+  body { font-size: 18px; }
+  .prompt { font-size: 21px; }
+  .choice { font-size: 19px; padding: 16px 18px; }
+}

@@ -1,0 +1,22 @@
+{% extends "cybergame/base.html" %}
+
+{% block body_class %}page-home{% endblock %}
+
+{% block content %}
+<header class="home-head">
+  <p class="home-kicker">Vesey Elementary</p>
+  <h1 class="home-title">Cyber Squad</h1>
+  <p class="home-sub">Pick your grade to start the mission.</p>
+</header>
+
+<nav class="grade-grid" aria-label="Choose a grade">
+  {% for grade in grades %}
+    <a class="grade-card grade-{{ grade.number }}" href="{% url 'cybergame:start_grade' grade.number %}">
+      <span class="grade-num">{{ grade.number }}</span>
+      <span class="grade-label">{{ grade.label }}</span>
+    </a>
+  {% empty %}
+    <p class="empty">No grades loaded yet. Run <code>python manage.py seed_content</code>.</p>
+  {% endfor %}
+</nav>
+{% endblock %}

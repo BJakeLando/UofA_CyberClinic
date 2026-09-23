@@ -1,0 +1,53 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}{{ grade.label }} — Question {{ number_shown }}{% endblock %}
+
+{% block content %}
+<div class="qwrap">
+
+  <div class="trackbar" aria-label="Question {{ number_shown }} of {{ total }}">
+    <span class="track-count">{{ number_shown }} / {{ total }}</span>
+    <span class="track-score">{{ score }} points</span>
+  </div>
+
+  <div class="card">
+    <p class="stage-tag stage-{{ scenario.stage }}">{{ scenario.get_stage_display }}</p>
+    <p class="prompt">{{ scenario.prompt|linebreaksbr }}</p>
+    {% if scenario.image %}
+      <img class="prompt-img" src="{{ scenario.image.url }}" alt="">
+    {% endif %}
+  </div>
+
+  {% if chosen %}
+    <div class="feedback {% if chosen.points == best_points %}feedback-best{% elif chosen.points > 0 %}feedback-ok{% else %}feedback-try{% endif %}">
+      <p class="feedback-head">
+        {% if chosen.points == best_points %}Best move!{% elif chosen.points > 0 %}Good call.{% else %}Let's look at that one.{% endif %}
+      </p>
+      <p class="feedback-body">{{ chosen.feedback }}</p>
+    </div>
+
+    <ul class="recap">
+      {% for c in choices %}
+        <li class="recap-item {% if c.pk == chosen.pk %}recap-picked{% endif %}{% if c.points == best_points %} recap-best{% endif %}">
+          {{ c.text }}
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if is_last %}
+      <a class="btn btn-go" href="{% url 'cybergame:results' grade.number %}">See your score</a>
+    {% else %}
+      <a class="btn btn-go" href="{% url 'cybergame:question' grade.number next_index %}">Next question</a>
+    {% endif %}
+
+  {% else %}
+    <form method="post" class="choices">
+      {% csrf_token %}
+      {% for c in choices %}
+        <button class="choice" type="submit" name="choice" value="{{ c.pk }}">{{ c.text }}</button>
+      {% endfor %}
+    </form>
+  {% endif %}
+
+</div>
+{% endblock %}
