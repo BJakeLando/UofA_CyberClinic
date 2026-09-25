@@ -1,24 +1,28 @@
 {% extends "cybergame/base.html" %}
 
-{% block title %}{{ grade.label }} — Results{% endblock %}
+{% block title %}Grade {{ grade.number }} — Stars{% endblock %}
 
 {% block content %}
-<div class="panel">
-  <h1 class="panel-title">Mission complete</h1>
-
-  <p class="score-big">{{ score }}<span class="score-of"> / {{ total_possible }}</span></p>
-  <p class="panel-meta">Best answer chosen on {{ best_count }} of {{ total }} questions</p>
-
-  <div class="takeaways">
-    <h2 class="takeaway-head">Remember these three</h2>
-    <ol class="takeaway-list">
-      <li>If an offer sounds too good to be true, it probably is.</li>
-      <li>Never share your password, your full name, or where you live.</li>
-      <li>If something feels off — or you already clicked — tell a grown-up right away. You won't be in trouble for telling.</li>
-    </ol>
+<section class="panel" id="done">
+  <div class="stars-row" aria-label="{{ stars }} out of 3 stars">
+    {% for on in star_slots %}<span class="big-star{% if on %} is-on{% endif %}" aria-hidden="true">⭐</span>{% endfor %}
   </div>
 
-  <a class="btn btn-go" href="{% url 'cybergame:start_grade' grade.number %}">Play again</a>
-  <a class="btn-quiet" href="{% url 'cybergame:grade_select' %}">Back to grades</a>
-</div>
+  <h1 class="panel-title" data-say="{{ cheer }}">{{ cheer }}</h1>
+  <p class="score" data-say="You got {{ score }} out of {{ total_possible }} stars.">{{ score }} <span class="score-of">/ {{ total_possible }}</span></p>
+
+  <ul class="rules">
+    <li data-say="Free prizes are tricks."><span class="rule-emoji" aria-hidden="true">🎁</span>Free prizes are tricks</li>
+    <li data-say="Keep your password secret."><span class="rule-emoji" aria-hidden="true">🔑</span>Keep your password secret</li>
+    <li data-say="Keep your name and home private."><span class="rule-emoji" aria-hidden="true">🏠</span>Keep your name and home private</li>
+    <li data-say="Never go meet game friends."><span class="rule-emoji" aria-hidden="true">🚫</span>Never go meet game friends</li>
+    <li data-say="Always tell a grown-up. You are not in trouble for telling."><span class="rule-emoji" aria-hidden="true">🙋</span>Always tell a grown-up</li>
+  </ul>
+
+  <div class="done-actions">
+    <button type="button" class="say-btn" data-scope="#done" aria-label="Read out loud">🔊</button>
+    <a class="btn btn-go" href="{% url 'cybergame:start_grade' grade.number %}">Play again</a>
+  </div>
+  <a class="btn-back" href="{% url 'cybergame:grade_select' %}">Change grade</a>
+</section>
 {% endblock %}

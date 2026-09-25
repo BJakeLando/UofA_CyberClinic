@@ -9,9 +9,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'cybergame/style.css' %}">
 </head>
-<body class="{% block body_class %}{% endblock %}">
-  <div class="shell">
+<body>
+  <main class="shell">
     {% block content %}{% endblock %}
-  </div>
+  </main>
+
+  <script>
+  /* Read-aloud: any .say-btn reads every [data-say] inside its data-scope, in order.
+     Uses the browser's built-in voice, so nothing is sent anywhere. */
+  (function () {
+    var buttons = document.querySelectorAll(".say-btn");
+    if (!("speechSynthesis" in window)) {
+      buttons.forEach(function (b) { b.hidden = true; });
+      return;
+    }
+    document.addEventListener("click", function (e) {
+      var btn = e.target.closest(".say-btn");
+      if (!btn) return;
+      var scope = document.querySelector(btn.dataset.scope) || document;
+      var text = Array.prototype.map.call(
+        scope.querySelectorAll("[data-say]"),
+        function (el) { return el.dataset.say; }
+      ).join(". ");
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    });
+  })();
+  </script>
 </body>
 </html>
