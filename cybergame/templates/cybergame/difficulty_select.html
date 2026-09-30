@@ -1,0 +1,36 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}Grade {{ grade.number }} — Pick a level{% endblock %}
+
+{% block content %}
+<header class="home">
+  <div class="home-badge" aria-hidden="true">{{ buddy }}</div>
+  <h1 class="home-title home-title-sm">Grade {{ grade.number }}</h1>
+  <p class="home-sub">Pick a level</p>
+</header>
+
+<nav class="levels" aria-label="Pick a level">
+  {% for t in tracks %}
+    {% if t.ready %}
+      <a class="level level-{{ t.slug }}" href="{% url 'cybergame:start_track' grade.number t.slug %}">
+        <span class="level-emoji" aria-hidden="true">{{ t.emoji }}</span>
+        <span class="level-body">
+          <span class="level-name">{{ t.name }}</span>
+          <span class="level-blurb">{{ t.blurb }}</span>
+        </span>
+        <span class="level-count">{{ t.count }}</span>
+      </a>
+    {% else %}
+      <span class="level level-soon" aria-disabled="true">
+        <span class="level-emoji" aria-hidden="true">{{ t.emoji }}</span>
+        <span class="level-body">
+          <span class="level-name">{{ t.name }}</span>
+          <span class="level-blurb">Coming soon</span>
+        </span>
+      </span>
+    {% endif %}
+  {% endfor %}
+</nav>
+
+<a class="btn-back" href="{% url 'cybergame:grade_select' %}">Change grade</a>
+{% endblock %}

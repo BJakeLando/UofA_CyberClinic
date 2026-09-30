@@ -7,7 +7,9 @@ app_name = "cybergame"
 
 urlpatterns = [
     path("", views.grade_select, name="grade_select"),
-    path("grade/<int:number>/", views.start_grade, name="start_grade"),
-    path("grade/<int:number>/q/<int:index>/", views.question, name="question"),
-    path("grade/<int:number>/done/", views.results, name="results"),
+    # pick a grade -> pick a difficulty
+    path("grade/<int:number>/", views.difficulty_select, name="difficulty_select"),
+    path("grade/<int:number>/<slug:difficulty>/", views.start_track, name="start_track"),
+    path("grade/<int:number>/<slug:difficulty>/q/<int:index>/", views.question, name="question"),
+    path("grade/<int:number>/<slug:difficulty>/done/", views.results, name="results"),
 ]

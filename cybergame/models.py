@@ -14,6 +14,36 @@ class Grade(models.Model):
         return self.label
 
 
+class Track(models.Model):
+    """One difficulty lane inside a grade.
+
+    beginner      words only, hints on
+    intermediate  device scenes, hints on (word buttons still shown)
+    advanced      device scenes, hints off (tap the screen itself)
+    """
+
+    class Difficulty(models.TextChoices):
+        BEGINNER = "beginner", "Beginner"
+        INTERMEDIATE = "intermediate", "Intermediate"
+        ADVANCED = "advanced", "Advanced"
+
+    grade = models.ForeignKey(Grade, related_name="tracks", on_delete=models.CASCADE)
+    difficulty = models.CharField(max_length=14, choices=Difficulty.choices)
+    blurb = models.CharField(max_length=60, blank=True)   # shown on the pick button
+    emoji = models.CharField(max_length=8, blank=True)
+    order = models.PositiveSmallIntegerField(default=0)
+
+    # hints on = show the question line and the worded answer buttons
+    show_hints = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["grade__number", "order"]
+        unique_together = ("grade", "difficulty")
+
+    def __str__(self):
+        return f"{self.grade.label} — {self.get_difficulty_display()}"
+
+
 class Scenario(models.Model):
     class Stage(models.TextChoices):
         RECOGNIZE = "recognize", "Recognize"
@@ -21,23 +51,27 @@ class Scenario(models.Model):
         REPORT = "report", "Report"
         RECOVERY = "recovery", "If it already happened"
 
-    # NEW: how the scene is drawn on screen
+    # how the scene is drawn on screen
     class Kind(models.TextChoices):
         CHAT = "chat", "Chat message"
         POPUP = "popup", "Pop-up"
         VOICE = "voice", "Voice message"
         ASK = "ask", "Plain question"
+        DEVICE = "device", "Tablet screen"      # tap the screen itself
 
     grade = models.ForeignKey(Grade, related_name="scenarios", on_delete=models.CASCADE)
+    track = models.ForeignKey(
+        Track, related_name="scenarios", on_delete=models.CASCADE, null=True, blank=True
+    )
     stage = models.CharField(max_length=20, choices=Stage.choices, default=Stage.DECIDE)
     prompt = models.TextField()
     image = models.ImageField(upload_to="scenarios/", blank=True, null=True)
     order = models.PositiveSmallIntegerField(default=0)
     active = models.BooleanField(default=True)
 
-    # NEW display fields
+    # display fields
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.ASK)
-    sender = models.CharField(max_length=40, blank=True)          # "BlockBuddy"
+    sender = models.CharField(max_length=40, blank=True)          # "BlockBuddy", or app name for device
     sender_emoji = models.CharField(max_length=16, blank=True)    # avatar
     art = models.CharField(max_length=16, blank=True)             # big picture for pop-ups and plain questions
     question = models.CharField(max_length=80, default="What do you do?")
@@ -50,14 +84,25 @@ class Scenario(models.Model):
 
 
 class Choice(models.Model):
+    """One answer.
+
+    For device scenes, `hotspot` decides where the answer lives on the
+    simulated screen instead of being a button in a list.
+    """
+
+    class Hotspot(models.TextChoices):
+        BAIT = "bait", "The tempting button"
+        CLOSE = "close", "The little X"
+        REPORT = "report", "The report flag"
+
     scenario = models.ForeignKey(Scenario, related_name="choices", on_delete=models.CASCADE)
     text = models.CharField(max_length=200)
     points = models.PositiveSmallIntegerField(default=0)   # 0 / 1 / 2
     feedback = models.TextField()
     order = models.PositiveSmallIntegerField(default=0)
 
-    # NEW
     emoji = models.CharField(max_length=16, blank=True)
+    hotspot = models.CharField(max_length=10, choices=Hotspot.choices, blank=True)
 
     class Meta:
         ordering = ["order"]

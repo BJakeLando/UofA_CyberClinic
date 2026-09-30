@@ -307,7 +307,6 @@ body {
   box-shadow: var(--drop);
   padding: 0 22px 26px;
   text-align: center;
-  transform: rotate(-1.2deg);
 }
 
 .popup-bar {
@@ -506,4 +505,287 @@ button:focus-visible {
   .popup-text   { font-size: 27px; }
   .ask-text     { font-size: 25px; }
   .question     { font-size: 27px; }
+}
+
+/* ==========================================================================
+   Level picker  (beginner / intermediate / advanced)
+   ========================================================================== */
+
+.home-title-sm { font-size: clamp(38px, 8vw, 58px); }
+
+.levels {
+  display: grid;
+  gap: 16px;
+  margin: 0 0 26px;
+}
+
+.level {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--cloud);
+  border: var(--line);
+  border-radius: 22px;
+  box-shadow: var(--drop);
+  padding: 16px 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.level:hover,
+.level:focus-visible { transform: translate(-2px, -3px); box-shadow: 8px 9px 0 var(--ink); }
+.level:active        { transform: translate(3px, 3px);   box-shadow: 2px 2px 0 var(--ink); }
+
+.level-beginner     { background: #d8f8e4; }
+.level-intermediate { background: #fff3c9; }
+.level-advanced     { background: #ffe0e8; }
+
+.level-emoji { font-size: 44px; line-height: 1; }
+.level-body  { display: flex; flex-direction: column; flex: 1; }
+.level-name  { font-size: 30px; font-weight: 700; line-height: 1.1; }
+.level-blurb { font-size: 18px; color: var(--ink-2); font-weight: 500; }
+
+.level-count {
+  background: var(--cloud);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 14px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.level-soon {
+  opacity: 0.55;
+  box-shadow: none;
+  border-style: dashed;
+  cursor: default;
+}
+.level-soon:hover { transform: none; box-shadow: none; }
+
+.track-tag {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* ==========================================================================
+   Device scene  (a tablet the player taps directly)
+   ========================================================================== */
+
+.device-form { margin: 0; }
+
+.device {
+  background: var(--ink);
+  border: var(--line);
+  border-radius: 34px;
+  box-shadow: var(--drop);
+  padding: 16px 14px 26px;
+  position: relative;
+}
+
+.device-cam {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--ink-2);
+  margin: 0 auto 12px;
+}
+
+.device-screen {
+  position: relative;
+  background: var(--grass);
+  border: 4px solid var(--ink);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 340px;
+}
+
+.game-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--ocean);
+  border-bottom: 4px solid var(--ink);
+  padding: 8px 12px;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--cloud);
+}
+
+.game-world {
+  position: relative;
+  height: 250px;
+  background:
+    radial-gradient(circle at 20% 78%, #2aa85a 0 46px, transparent 47px),
+    radial-gradient(circle at 76% 84%, #2aa85a 0 38px, transparent 39px),
+    linear-gradient(var(--grass) 0 60%, #2aa85a 60% 100%);
+}
+.game-world .sprite { position: absolute; font-size: 44px; }
+.game-world .s1 { left: 14%; top: 44%; }
+.game-world .s2 { left: 64%; top: 52%; }
+.game-world .s3 { left: 40%; top: 30%; font-size: 34px; }
+
+.report-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 4px solid var(--cloud);
+  border-radius: 999px;
+  background: var(--berry);
+  color: var(--cloud);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 5px 14px;
+  cursor: pointer;
+}
+.report-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* the bait pop-up sitting on top of the game */
+.ad {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  width: min(88%, 380px);
+  background: var(--sun);
+  border: var(--line);
+  border-radius: 20px;
+  box-shadow: var(--drop);
+  padding: 14px 16px 18px;
+  text-align: center;
+}
+
+.ad-close {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 44px; height: 44px;
+  border: var(--line);
+  border-radius: 50%;
+  background: var(--cloud);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--ink);
+}
+.ad-close:disabled { opacity: 0.5; cursor: default; }
+
+.ad-art  { font-size: 58px; line-height: 1; }
+.ad-text { margin: 2px 0 12px; font-size: 28px; font-weight: 700; line-height: 1.15; }
+
+.ad-cta {
+  display: block;
+  width: 100%;
+  border: var(--line);
+  border-radius: 14px;
+  background: var(--berry);
+  color: var(--cloud);
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 700;
+  padding: 12px 10px;
+  cursor: pointer;
+  box-shadow: var(--drop-sm);
+}
+.ad-cta:disabled { opacity: 0.5; cursor: default; }
+
+.hint {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 20px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+/* intermediate: the same answers echoed as words under the tablet */
+.choices-echo { margin-top: 18px; }
+
+/* ==========================================================================
+   Results rules  (hover or tap to open)
+   ========================================================================== */
+
+.rules-hint {
+  margin: 18px 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* the older `.rules li` rule is a flex row; a rule card needs to stack */
+.rules li.rule {
+  display: block;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 0;
+  list-style: none;
+}
+
+.rule-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: var(--line);
+  border-radius: 16px;
+  background: var(--cloud);
+  box-shadow: var(--drop-sm);
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 600;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.rule-short { flex: 1; }
+
+.rule-more {
+  width: 30px; height: 30px;
+  flex: 0 0 auto;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: var(--sun);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 25px;
+  text-align: center;
+}
+
+.rule-detail {
+  display: none;
+  border: 4px dashed var(--ink);
+  border-radius: 16px;
+  margin: 8px 0 0;
+  padding: 14px 16px;
+  background: #fffbe9;
+  font-size: 19px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.rule:hover .rule-detail,
+.rule:focus-within .rule-detail,
+.rule.is-open .rule-detail { display: block; }
+
+.rule:hover .rule-more,
+.rule.is-open .rule-more { background: var(--grass); color: var(--cloud); }
+
+/* ==========================================================================
+   Small screens
+   ========================================================================== */
+
+@media (max-width: 500px) {
+  /* the decorative clouds bunch up in the corner on a phone */
+  body { background: var(--sky); }
+  .device-screen { min-height: 300px; }
+  .game-world { height: 210px; }
+  .ad-text { font-size: 24px; }
 }

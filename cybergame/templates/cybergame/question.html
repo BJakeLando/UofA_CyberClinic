@@ -15,7 +15,7 @@
   <section class="scene" id="scene">
     {% if scenario.kind == "chat" %}
       <div class="screen">
-        <div class="screen-bar"><span aria-hidden="true">🎮</span> Pixel Park</div>
+        <div class="screen-bar"><span aria-hidden="true">🎮</span> {{ scenario.sender|default:"Pixel Park" }}</div>
         <div class="msg">
           <span class="avatar" aria-hidden="true">{{ scenario.sender_emoji }}</span>
           <div class="msg-body">
@@ -45,6 +45,55 @@
         </div>
       </div>
 
+    {% elif scenario.kind == "device" %}
+      {# A real-looking tablet. The answers live ON the screen. #}
+      <form method="post" class="device-form">
+        {% csrf_token %}
+        <div class="device">
+          <div class="device-cam" aria-hidden="true"></div>
+          <div class="device-screen">
+
+            <div class="game-bar">
+              <span data-say="You are playing {{ scenario.sender|default:'Pixel Park' }}.">🎮 {{ scenario.sender|default:"Pixel Park" }}</span>
+              {% with r=hotspots.report %}
+                {% if r %}
+                  <button class="report-btn" type="submit" name="choice" value="{{ r.pk }}"
+                          {% if chosen %}disabled{% endif %}
+                          data-say="There is a report button.">
+                    <span aria-hidden="true">🚩</span> Report
+                  </button>
+                {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="game-world" aria-hidden="true">
+              <span class="sprite s1">🧍</span><span class="sprite s3">☁️</span><span class="sprite s2">🌳</span>
+            </div>
+
+            <div class="ad" role="group" aria-label="A pop-up appeared">
+              {% with x=hotspots.close %}
+                {% if x %}
+                  <button class="ad-close" type="submit" name="choice" value="{{ x.pk }}"
+                          {% if chosen %}disabled{% endif %} aria-label="Close the pop-up">✕</button>
+                {% endif %}
+              {% endwith %}
+              <div class="ad-art" aria-hidden="true">{{ scenario.art|default:"🪙" }}</div>
+              <p class="ad-text" data-say="A pop up says: {{ scenario.prompt }}">{{ scenario.prompt }}</p>
+              {% with b=hotspots.bait %}
+                {% if b %}
+                  <button class="ad-cta" type="submit" name="choice" value="{{ b.pk }}"
+                          {% if chosen %}disabled{% endif %}>{{ b.text }}</button>
+                {% endif %}
+              {% endwith %}
+            </div>
+
+          </div>
+        </div>
+      </form>
+      {% if not chosen and track.show_hints %}
+        <p class="hint" data-say="Tap what you would really do.">Tap what you would really do.</p>
+      {% endif %}
+
     {% else %}
       <div class="ask">
         <div class="ask-art" aria-hidden="true">{{ scenario.art }}</div>
@@ -54,20 +103,24 @@
   </section>
 
   {% if not chosen %}
-    <div class="question-row">
-      <h2 class="question" data-say="{{ scenario.question }}">{{ scenario.question }}</h2>
-      <button type="button" class="say-btn" data-scope=".play" aria-label="Read out loud">🔊</button>
-    </div>
+    {% if track.show_hints %}
+      <div class="question-row">
+        <h2 class="question" data-say="{{ scenario.question }}">{{ scenario.question }}</h2>
+        <button type="button" class="say-btn" data-scope=".play" aria-label="Read out loud">🔊</button>
+      </div>
+    {% endif %}
 
-    <form method="post" class="choices">
-      {% csrf_token %}
-      {% for c in choices %}
-        <button class="choice" type="submit" name="choice" value="{{ c.pk }}">
-          <span class="choice-emoji" aria-hidden="true">{{ c.emoji }}</span>
-          <span class="choice-text" data-say="Choice {{ forloop.counter }}. {{ c.text }}">{{ c.text }}</span>
-        </button>
-      {% endfor %}
-    </form>
+    {% if scenario.kind != "device" or track.show_hints %}
+      <form method="post" class="choices{% if scenario.kind == 'device' %} choices-echo{% endif %}">
+        {% csrf_token %}
+        {% for c in choices %}
+          <button class="choice" type="submit" name="choice" value="{{ c.pk }}">
+            <span class="choice-emoji" aria-hidden="true">{{ c.emoji }}</span>
+            <span class="choice-text" data-say="Choice {{ forloop.counter }}. {{ c.text }}">{{ c.text }}</span>
+          </button>
+        {% endfor %}
+      </form>
+    {% endif %}
 
   {% else %}
     <section class="result result-{{ tier }}" id="result">
@@ -85,9 +138,9 @@
       <div class="result-actions">
         <button type="button" class="say-btn say-btn-light" data-scope="#result" aria-label="Read out loud">🔊</button>
         {% if is_last %}
-          <a class="btn btn-next" href="{% url 'cybergame:results' grade.number %}">See my stars</a>
+          <a class="btn btn-next" href="{% url 'cybergame:results' grade.number track.difficulty %}">See my stars</a>
         {% else %}
-          <a class="btn btn-next" href="{% url 'cybergame:question' grade.number next_index %}">Next</a>
+          <a class="btn btn-next" href="{% url 'cybergame:question' grade.number track.difficulty next_index %}">Next</a>
         {% endif %}
       </div>
     </section>

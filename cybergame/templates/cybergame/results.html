@@ -11,19 +11,40 @@
   <h1 class="panel-title" data-say="{{ cheer }}">{{ cheer }}</h1>
   <p class="score" data-say="You got {{ score }} out of {{ total_possible }} stars.">{{ score }} <span class="score-of">/ {{ total_possible }}</span></p>
 
+  <p class="rules-hint" data-say="Point at a rule to learn more about it.">Point at a rule to learn more</p>
+
   <ul class="rules">
-    <li data-say="Free prizes are tricks."><span class="rule-emoji" aria-hidden="true">🎁</span>Free prizes are tricks</li>
-    <li data-say="Keep your password secret."><span class="rule-emoji" aria-hidden="true">🔑</span>Keep your password secret</li>
-    <li data-say="Keep your name and home private."><span class="rule-emoji" aria-hidden="true">🏠</span>Keep your name and home private</li>
-    <li data-say="Have a secret family code word that no one knows. Never post it online. "><span class="rule-emoji" aria-hidden="true">🏠</span>Have a secret family code word that no one knows. Never post it online.</li>
-    <li data-say="Never go meet game friends."><span class="rule-emoji" aria-hidden="true">🚫</span>Never go meet game friends</li>
-    <li data-say="Always tell a grown-up. You are not in trouble for telling."><span class="rule-emoji" aria-hidden="true">🙋</span>Always tell a grown-up</li>
+    {% for r in rules %}
+      <li class="rule">
+        <button type="button" class="rule-head" aria-expanded="false" aria-controls="rule-{{ forloop.counter }}"
+                data-say="{{ r.short }}">
+          <span class="rule-emoji" aria-hidden="true">{{ r.emoji }}</span>
+          <span class="rule-short">{{ r.short }}</span>
+          <span class="rule-more" aria-hidden="true">?</span>
+        </button>
+        <div class="rule-detail" id="rule-{{ forloop.counter }}" data-say="{{ r.detail }}">{{ r.detail }}</div>
+      </li>
+    {% endfor %}
   </ul>
 
   <div class="done-actions">
     <button type="button" class="say-btn" data-scope="#done" aria-label="Read out loud">🔊</button>
-    <a class="btn btn-go" href="{% url 'cybergame:start_grade' grade.number %}">Play again</a>
+    <a class="btn btn-go" href="{% url 'cybergame:start_track' grade.number track.difficulty %}">Play again</a>
   </div>
-  <a class="btn-back" href="{% url 'cybergame:grade_select' %}">Change grade</a>
+  <a class="btn-back" href="{% url 'cybergame:difficulty_select' grade.number %}">Try another level</a>
 </section>
+
+<script>
+/* Rules open on hover (mouse) via CSS, and on tap/click or keyboard here.
+   Kept in the template because it is the only page that uses it. */
+(function () {
+  document.addEventListener("click", function (e) {
+    var head = e.target.closest(".rule-head");
+    if (!head) return;
+    var open = head.getAttribute("aria-expanded") === "true";
+    head.setAttribute("aria-expanded", open ? "false" : "true");
+    head.closest(".rule").classList.toggle("is-open", !open);
+  });
+})();
+</script>
 {% endblock %}
