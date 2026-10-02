@@ -66,9 +66,17 @@
               {% endwith %}
             </div>
 
-            <div class="game-world" aria-hidden="true">
-              <span class="sprite s1">🧍</span><span class="sprite s3">☁️</span><span class="sprite s2">🌳</span>
-            </div>
+            {% comment %}
+              The pop-up lives INSIDE the game world, not floating over the
+              whole screen. The game bar is a sibling above it, so the pop-up
+              cannot cover the report button no matter how far the text wraps
+              on a narrow phone. It used to, and the report button is the best
+              answer in the scene.
+            {% endcomment %}
+            <div class="game-world">
+              <div class="game-sprites" aria-hidden="true">
+                <span class="sprite s1">🧍</span><span class="sprite s3">☁️</span><span class="sprite s2">🌳</span>
+              </div>
 
             <div class="ad" role="group" aria-label="A pop-up appeared">
               {% with x=hotspots.close %}
@@ -86,6 +94,7 @@
                 {% endif %}
               {% endwith %}
             </div>
+            </div>{# /.game-world #}
 
           </div>
         </div>
