@@ -58,6 +58,7 @@ class Scenario(models.Model):
         VOICE = "voice", "Voice message"
         ASK = "ask", "Plain question"
         DEVICE = "device", "Tablet screen"      # tap the screen itself
+        TEXT = "text", "Text message"           # tap the screen itself
 
     grade = models.ForeignKey(Grade, related_name="scenarios", on_delete=models.CASCADE)
     track = models.ForeignKey(
@@ -75,6 +76,10 @@ class Scenario(models.Model):
     sender_emoji = models.CharField(max_length=16, blank=True)    # avatar
     art = models.CharField(max_length=16, blank=True)             # big picture for pop-ups and plain questions
     question = models.CharField(max_length=80, default="What do you do?")
+
+    # Shown only on tracks with show_hints=True. Points at the tell without
+    # giving the answer away. Blank falls back to a generic line.
+    hint = models.CharField(max_length=160, blank=True)
 
     class Meta:
         ordering = ["grade__number", "order"]
@@ -94,6 +99,7 @@ class Choice(models.Model):
         BAIT = "bait", "The tempting button"
         CLOSE = "close", "The little X"
         REPORT = "report", "The report flag"
+        VERIFY = "verify", "The saved contact"
 
     scenario = models.ForeignKey(Scenario, related_name="choices", on_delete=models.CASCADE)
     text = models.CharField(max_length=200)

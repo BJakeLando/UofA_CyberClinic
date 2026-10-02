@@ -246,6 +246,75 @@ def D(app, prompt, art, bait, close, report, stage="recognize"):
 CLOSE = ("❌", "Close it", "Closing it is safe. Reporting it is even better.")
 REPORT = ("🚩", "Report and tell", "You reported it. Now tell a teacher or family member.")
 
+
+# ---------------------------------------------------------------------------
+# Text-message scenes (kind="text")
+#
+# A phone showing one text from a number that is NOT in contacts, claiming to
+# be somebody the kid knows. The lesson is not "spot the scary message" - the
+# message looks completely ordinary on purpose. The tell is structural and
+# visible on screen: an unknown number at the top, and the real saved contact
+# sitting right underneath it.
+#
+# The safe answer here is NOT close-or-report. You cannot report your way out
+# of an impersonation; you check through a channel you already trust. That is
+# why these use a `verify` hotspot instead of `report`.
+#
+# Three answers, one per hotspot:
+#   bait    - the friendly quick reply                 (0 points)
+#   close   - delete the message                       (1 point)
+#   verify  - call the number already saved in contacts (2 points)
+#
+# `hint` shows on Intermediate only (Track.show_hints). Advanced gets the
+# identical screen with no hint and no answer list.
+# ---------------------------------------------------------------------------
+
+def T(number, prompt, bait, close, verify, hint, stage="decide"):
+    """One text-message scene. bait/close/verify are (emoji, text, feedback)."""
+    return {
+        "kind": "text", "prompt": prompt, "art": "", "sender": number,
+        "sender_emoji": "", "stage": stage, "question": "What do you do?",
+        "hint": hint,
+        "choices": [
+            (bait[0], bait[1], 0, bait[2], "bait"),
+            (close[0], close[1], 1, close[2], "close"),
+            (verify[0], verify[1], 2, verify[2], "verify"),
+        ],
+    }
+
+
+DELETE_IT = ("🗑️", "Delete",
+             "Deleting it is safe. Telling a teacher or family member is better.")
+
+# 3rd and 4th: someone claiming to be a classmate, after a password.
+TEXT_CLASSMATE = T(
+    "+1 520-555-0147",
+    "hey its Jayden from class!! i got a new phone 📱 whats ur Minecr@ft "
+    "password so i can send u stuff",
+    ("💬", "Send it",
+     "Never send a password, not even to a friend. Real friends do not ask."),
+    DELETE_IT,
+    ("📞", "Call JAYDEN",
+     "You called the number already saved in the phone. That is how you find "
+     "out if it is really them."),
+    hint="Jayden's real number is saved under JAYDEN. This text came from a "
+         "random number.",
+)
+
+# 5th and 6th: someone claiming to be a parent, trying to get them to walk out.
+TEXT_PARENT = T(
+    "+1 520-555-0182",
+    "Hey this is Dad 😊 I got a new phone. Can you come outside and meet me?",
+    ("💬", "OK, coming!",
+     "Anyone can type that they are your dad. That number is not his."),
+    DELETE_IT,
+    ("📞", "Call DADDY",
+     "You called the number already saved for your dad, and asked your family "
+     "code word if you have one. That is exactly right."),
+    hint="Your dad's real number is saved under DADDY. This text came from a "
+         "random number.",
+)
+
 DEVICE_CONTENT = {
     3: [
         D("Pixel Park", "CLICK HERE FOR FREE GOLD!", "🪙",
@@ -263,6 +332,9 @@ DEVICE_CONTENT = {
         D("Pixel Park", "YOU ARE PLAYER NUMBER 1,000,000! CLAIM PRIZE!", "🎉",
           ("🎉", "Claim my prize", "Everybody sees this same message. Nobody wins."),
           CLOSE, REPORT),
+        TEXT_CLASSMATE,  # always last: appending never
+        # shifts the order of scenes kids already played
+
     ],
     4: [
         D("Pixel Park", "FREE R0BUX! TAP HERE NOW!", "⭐",
@@ -280,6 +352,9 @@ DEVICE_CONTENT = {
         D("Pixel Park", "SPIN THE WHEEL! YOU CANNOT LOSE!", "🎡",
           ("🎡", "Spin the wheel", "\"You cannot lose\" always means somebody else wins."),
           CLOSE, REPORT),
+        TEXT_CLASSMATE,  # always last: appending never
+        # shifts the order of scenes kids already played
+
     ],
     5: [
         D("Pixel Park", "FREE RARE SKIN! JUST ENTER YOUR PASSWORD", "🎽",
@@ -297,6 +372,9 @@ DEVICE_CONTENT = {
         D("Pixel Park", "MINECR@FT MODS - FREE DOWNLOAD - TAP", "⬇️",
           ("⬇️", "Download it", "Downloads from a pop-up can break the whole device."),
           CLOSE, REPORT),
+        TEXT_PARENT,  # always last: appending never
+        # shifts the order of scenes kids already played
+
     ],
     6: [
         D("Pixel Park", "SEND A PHOTO OF YOURSELF TO UNLOCK THIS LEVEL", "📸",
@@ -314,6 +392,9 @@ DEVICE_CONTENT = {
         D("Pixel Park", "UNLIMITED MONEY MOD - TAP TO INSTALL", "⬇️",
           ("⬇️", "Install the mod", "Cheat downloads are one of the easiest ways to get hacked."),
           CLOSE, REPORT),
+        TEXT_PARENT,  # always last: appending never
+        # shifts the order of scenes kids already played
+
     ],
 }
 
@@ -385,6 +466,7 @@ class Command(BaseCommand):
                             "sender_emoji": s["sender_emoji"],
                             "art": s["art"],
                             "question": s["question"],
+                            "hint": s.get("hint", ""),
                             "active": True,
                         },
                     )

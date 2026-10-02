@@ -90,15 +90,80 @@
           </div>
         </div>
       </form>
-      {% if not chosen and track.show_hints %}
-        <p class="hint" data-say="Tap what you would really do.">Tap what you would really do.</p>
-      {% endif %}
+
+    {% elif scenario.kind == "text" %}
+      {% comment %}
+        A phone showing one text from a number that is NOT in contacts.
+        The tell is visual: the unknown number at the top, and the real
+        saved contact sitting in the same app underneath it.
+      {% endcomment %}
+      <form method="post" class="device-form">
+        {% csrf_token %}
+        <div class="device device-phone">
+          <div class="device-cam" aria-hidden="true"></div>
+          <div class="device-screen">
+
+            <div class="msgs-bar">
+              <span class="msgs-back" aria-hidden="true">‹</span>
+              <span class="msgs-who"
+                    data-say="A text message from an unknown number, {{ scenario.sender }}. It is not in your contacts.">
+                <span class="msgs-num">{{ scenario.sender }}</span>
+                <span class="msgs-tag">not in your contacts</span>
+              </span>
+            </div>
+
+            <div class="sms">
+              <p class="sms-bubble" data-say="The text says: {{ scenario.prompt }}">{{ scenario.prompt }}</p>
+              <span class="sms-time" aria-hidden="true">now</span>
+            </div>
+
+            <div class="sms-actions">
+              {% with b=hotspots.bait %}
+                {% if b %}
+                  <button class="quick-reply" type="submit" name="choice" value="{{ b.pk }}"
+                          {% if chosen %}disabled{% endif %}>{{ b.text }}</button>
+                {% endif %}
+              {% endwith %}
+              {% with x=hotspots.close %}
+                {% if x %}
+                  <button class="msg-delete" type="submit" name="choice" value="{{ x.pk }}"
+                          {% if chosen %}disabled{% endif %}>
+                    <span aria-hidden="true">{{ x.emoji|default:"🗑️" }}</span> {{ x.text }}
+                  </button>
+                {% endif %}
+              {% endwith %}
+            </div>
+
+            {% with v=hotspots.verify %}
+              {% if v %}
+                <div class="contacts">
+                  <span class="contacts-label" aria-hidden="true">Your saved contacts</span>
+                  <button class="contact-call" type="submit" name="choice" value="{{ v.pk }}"
+                          {% if chosen %}disabled{% endif %}>
+                    <span class="contact-ava" aria-hidden="true">{{ v.emoji|default:"📞" }}</span>
+                    <span class="contact-name">{{ v.text }}</span>
+                  </button>
+                </div>
+              {% endif %}
+            {% endwith %}
+
+          </div>
+        </div>
+      </form>
 
     {% else %}
       <div class="ask">
         <div class="ask-art" aria-hidden="true">{{ scenario.art }}</div>
         <p class="ask-text" data-say="{{ scenario.prompt }}">{{ scenario.prompt }}</p>
       </div>
+    {% endif %}
+
+    {% if not chosen and track.show_hints %}
+      {% if scenario.hint %}
+        <p class="hint" data-say="Hint. {{ scenario.hint }}">{{ scenario.hint }}</p>
+      {% elif scenario.kind == "device" or scenario.kind == "text" %}
+        <p class="hint" data-say="Tap what you would really do.">Tap what you would really do.</p>
+      {% endif %}
     {% endif %}
   </section>
 
@@ -110,8 +175,8 @@
       </div>
     {% endif %}
 
-    {% if scenario.kind != "device" or track.show_hints %}
-      <form method="post" class="choices{% if scenario.kind == 'device' %} choices-echo{% endif %}">
+    {% if scenario.kind != "device" and scenario.kind != "text" or track.show_hints %}
+      <form method="post" class="choices{% if scenario.kind == 'device' or scenario.kind == 'text' %} choices-echo{% endif %}">
         {% csrf_token %}
         {% for c in choices %}
           <button class="choice" type="submit" name="choice" value="{{ c.pk }}">
