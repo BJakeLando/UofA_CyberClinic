@@ -1,0 +1,32 @@
+{% extends "cybergame/base.html" %}
+{% block title %}Cyber Squad{% endblock %}
+
+{% block content %}
+<header class="home">
+  <div class="home-badge" aria-hidden="true">🛡️</div>
+  <h1 class="home-title">Cyber Squad</h1>
+  <p class="home-sub" data-say="Learn how to spot online tricks.">Learn how to spot online tricks</p>
+</header>
+
+<nav class="levels" aria-label="How do you want to start?">
+  <a class="level level-beginner" href="{% url 'cybergame:join_room' %}">
+    <span class="level-emoji" aria-hidden="true">🔢</span>
+    <span class="level-body">
+      <span class="level-name">Join my class</span>
+      <span class="level-blurb">I have a room code</span>
+    </span>
+  </a>
+
+  <a class="level level-intermediate" href="{% url 'cybergame:play_solo' %}">
+    <span class="level-emoji" aria-hidden="true">🎮</span>
+    <span class="level-body">
+      <span class="level-name">Play on my own</span>
+      <span class="level-blurb">No code needed</span>
+    </span>
+  </a>
+</nav>
+
+<p class="teacher-link">
+  <a href="{% url 'cybergame:teacher' %}">👩‍🏫 I'm a teacher — make a room</a>
+</p>
+{% endblock %}

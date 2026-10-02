@@ -6,7 +6,11 @@
 <header class="home">
   <div class="home-badge" aria-hidden="true">🏆</div>
   <h1 class="home-title home-title-sm">Leaderboard</h1>
-  <p class="home-sub">{{ total_players }} in the squad</p>
+  {% if room %}
+    <p class="home-sub">{{ room }} · {{ total_players }} playing</p>
+  {% else %}
+    <p class="home-sub">Just you</p>
+  {% endif %}
 </header>
 
 <ol class="board">
@@ -40,6 +44,12 @@
 {% if next_rank %}
   <p class="board-next" data-say="{{ next_rank.need }} more stars to become {{ next_rank.name }}">
     {{ next_rank.need }} more ⭐ to become {{ next_rank.emoji }} {{ next_rank.name }}
+  </p>
+{% endif %}
+
+{% if solo %}
+  <p class="solo-note" data-say="You are playing on your own. Join a class with a room code to see how you compare.">
+    You're playing on your own. Join a class with a room code to see how you compare.
   </p>
 {% endif %}
 

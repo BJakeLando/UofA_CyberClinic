@@ -1,0 +1,27 @@
+{% extends "cybergame/base.html" %}
+{% block title %}Make a room{% endblock %}
+
+{% block content %}
+<section class="panel">
+  <div class="panel-buddy" aria-hidden="true">👩‍🏫</div>
+  <h1 class="panel-title">Make a room</h1>
+  <p class="panel-line">
+    You'll get a 6-digit code. Write it on the board and your students type it in.
+    Everyone in the room shares one leaderboard.
+  </p>
+
+  <form method="post" class="code-form">
+    {% csrf_token %}
+    <input class="code-input code-input-text" type="text" name="label"
+           maxlength="60" placeholder="Room 12 — 3rd grade" aria-label="Room name">
+    <button class="btn btn-go" type="submit">Make it</button>
+  </form>
+
+  <p class="privacy-note">
+    🔒 Students never type a name. The game assigns one.
+    Please don't put a student's name in the room name.
+  </p>
+
+  <a class="btn-back" href="{% url 'cybergame:home' %}">Back</a>
+</section>
+{% endblock %}

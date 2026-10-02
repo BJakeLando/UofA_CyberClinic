@@ -1,0 +1,19 @@
+{% extends "cybergame/base.html" %}
+{% block title %}Room {{ room.code }}{% endblock %}
+
+{% block content %}
+<section class="panel card-reveal" id="made">
+  <p class="card-label" data-say="Your room code is">Your room code is</p>
+  <p class="room-code" data-say="{{ room.code }}">{{ room.code }}</p>
+  {% if room.label %}<p class="card-rank">{{ room.label }}</p>{% endif %}
+
+  <p class="panel-line" data-say="Write this on the board. Students pick Join my class and type it in.">
+    Write this on the board. Students tap <strong>Join my class</strong> and type it in.
+  </p>
+
+  <div class="result-actions">
+    <button type="button" class="say-btn" data-scope="#made" aria-label="Read out loud">🔊</button>
+    <a class="btn btn-go" href="{% url 'cybergame:home' %}">Done</a>
+  </div>
+</section>
+{% endblock %}

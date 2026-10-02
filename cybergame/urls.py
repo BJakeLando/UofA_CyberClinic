@@ -6,8 +6,13 @@ from . import views
 app_name = "cybergame"
 
 urlpatterns = [
-    # 1. pick an avatar, get a handle
+    # 0. land, then join a room or play solo
     path("", views.home, name="home"),
+    path("join/", views.join_room, name="join_room"),
+    path("solo/", views.play_solo, name="play_solo"),
+    path("teacher/", views.teacher, name="teacher"),
+
+    # 1. pick an avatar, get a handle
     path("squad/", views.avatar_select, name="avatar_select"),
     path("squad/claim/", views.claim_avatar, name="claim_avatar"),
     path("squad/leave/", views.leave, name="leave"),

@@ -50,3 +50,34 @@ def make_handle(emoji, taken=frozenset(), rng=None):
         candidate = f"{rng.choice(ADJECTIVES)}{word}{rng.randint(1000, 999999)}"
         if candidate not in taken:
             return candidate
+
+
+# ---------------------------------------------------------------------------
+# Room codes
+#
+# Six digits, the way Kahoot and Blooket do it. Digits beat letters for a
+# third grader copying a code off the whiteboard: no b/d confusion, no
+# capitals, and the number row is one reach on a Chromebook.
+# ---------------------------------------------------------------------------
+
+ROOM_CODE_LEN = 6
+
+
+def make_room_code(taken=frozenset(), rng=None):
+    rng = rng or random
+    lo, hi = 10 ** (ROOM_CODE_LEN - 1), 10 ** ROOM_CODE_LEN - 1
+    for _ in range(60):
+        code = str(rng.randint(lo, hi))
+        if code not in taken:
+            return code
+    # pool is crowded; widen rather than spin
+    n = ROOM_CODE_LEN + 1
+    while True:
+        code = str(rng.randint(10 ** (n - 1), 10 ** n - 1))
+        if code not in taken:
+            return code
+
+
+def normalise_code(raw):
+    """Kids paste spaces and dashes. Keep only the digits."""
+    return "".join(ch for ch in (raw or "") if ch.isdigit())[:12]

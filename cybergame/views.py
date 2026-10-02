@@ -1,8 +1,9 @@
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .handles import AVATARS, is_known_avatar, make_handle
-from .models import Completion, Grade, Player, Track
+from .handles import (AVATARS, is_known_avatar, make_handle,
+                      make_room_code, normalise_code)
+from .models import Classroom, Completion, Grade, Player, Track
 
 # One friendly animal per grade, shown on the grade buttons
 GRADE_BUDDIES = {3: "🐢", 4: "🦊", 5: "🦉", 6: "🦁"}
@@ -140,6 +141,7 @@ def _player_context(player):
     name, emoji = rank_for(player.total_points)
     return {
         "player": player,
+        "room": player.classroom,
         "rank_name": name,
         "rank_emoji": emoji,
         "next_rank": next_rank(player.total_points),
@@ -153,7 +155,45 @@ def _player_context(player):
 def home(request):
     if current_player(request):
         return redirect("cybergame:grade_select")
+    return render(request, "cybergame/landing.html", {})
+
+
+# --------------------------------------------------------------------------
+# rooms
+# --------------------------------------------------------------------------
+
+def pending_room(request):
+    """The room a player is about to join, held between join and claim."""
+    rid = request.session.get("join_room_id")
+    return Classroom.objects.filter(pk=rid, active=True).first() if rid else None
+
+
+def join_room(request):
+    """Type the code the teacher put on the board."""
+    error = None
+    if request.method == "POST":
+        code = normalise_code(request.POST.get("code"))
+        room = Classroom.objects.filter(code=code, active=True).first()
+        if room:
+            request.session["join_room_id"] = room.pk
+            return redirect("cybergame:avatar_select")
+        error = "We could not find that room. Check the numbers and try again."
+    return render(request, "cybergame/join_room.html", {"error": error})
+
+
+def play_solo(request):
+    request.session.pop("join_room_id", None)
     return redirect("cybergame:avatar_select")
+
+
+def teacher(request):
+    """Make a room and get a code to read out."""
+    if request.method == "POST":
+        label = (request.POST.get("label") or "").strip()[:60]
+        taken = set(Classroom.objects.values_list("code", flat=True))
+        room = Classroom.objects.create(code=make_room_code(taken), label=label)
+        return render(request, "cybergame/room_made.html", {"room": room})
+    return render(request, "cybergame/teacher.html", {})
 
 
 def avatar_select(request):
@@ -161,6 +201,7 @@ def avatar_select(request):
         request,
         "cybergame/avatar_select.html",
         {"avatars": [{"emoji": e, "word": w} for e, w in AVATARS],
+         "room": pending_room(request),
          **_player_context(current_player(request))},
     )
 
@@ -173,15 +214,18 @@ def claim_avatar(request):
     if not is_known_avatar(emoji):
         return redirect("cybergame:avatar_select")
 
-    taken = set(Player.objects.values_list("handle", flat=True))
-    player = Player.objects.create(handle=make_handle(emoji, taken), avatar=emoji)
-    request.session["player_id"] = player.pk
-
-    return render(
-        request,
-        "cybergame/squad_card.html",
-        {**_player_context(player)},
+    room = pending_room(request)
+    # handles only have to be unique inside the room
+    taken = set(
+        Player.objects.filter(classroom=room).values_list("handle", flat=True)
     )
+    player = Player.objects.create(
+        classroom=room, handle=make_handle(emoji, taken), avatar=emoji
+    )
+    request.session["player_id"] = player.pk
+    request.session.pop("join_room_id", None)
+
+    return render(request, "cybergame/squad_card.html", {**_player_context(player)})
 
 
 def leave(request):
@@ -383,7 +427,10 @@ def results(request, number, difficulty):
 
 def leaderboard(request):
     player = current_player(request)
-    top = list(Player.objects.all()[:20])
+    room = player.classroom if player else None
+
+    # One indexed scan over a single room, never a global sort.
+    top = list(Player.objects.filter(classroom=room)[:20]) if (player or room) else []
 
     rows = []
     for i, p in enumerate(top, start=1):
@@ -395,5 +442,6 @@ def leaderboard(request):
     return render(request, "cybergame/leaderboard.html",
                   {"rows": rows, "me_in_top": me_in_top,
                    "my_rank": player.rank if player else None,
-                   "total_players": Player.objects.count(),
+                   "total_players": Player.objects.filter(classroom=room).count(),
+                   "solo": player is not None and room is None,
                    **_player_context(player)})

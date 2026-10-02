@@ -9,6 +9,11 @@
   <p class="home-sub" data-say="Pick your animal. We will give you a secret squad name.">
     Pick your animal
   </p>
+  {% if room %}
+    <p class="room-tag" data-say="You are joining {{ room }}">
+      Joining <strong>{{ room }}</strong>
+    </p>
+  {% endif %}
 </header>
 
 {% if player %}

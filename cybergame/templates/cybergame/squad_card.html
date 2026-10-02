@@ -8,6 +8,7 @@
   <div class="card-avatar" aria-hidden="true">{{ player.avatar }}</div>
   <h1 class="card-handle" data-say="{{ player.handle }}">{{ player.handle }}</h1>
   <p class="card-rank">{{ rank_emoji }} {{ rank_name }}</p>
+  {% if room %}<p class="room-tag">{{ room }}</p>{% endif %}
   <p class="panel-line" data-say="Remember your animal. That is how you find yourself on the leaderboard.">
     Remember your animal. That is how you find yourself on the leaderboard.
   </p>

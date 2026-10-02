@@ -111,15 +111,51 @@ class Choice(models.Model):
         return self.text
 
 
+class Classroom(models.Model):
+    """One room. The unit everything is scoped to.
+
+    A room behaves like an instance in a game: you only ever see the
+    people in yours. That keeps the leaderboard meaningful for a class
+    of 25, and it keeps every leaderboard read to a single indexed scan
+    no matter how many rooms exist nationally.
+    """
+
+    code = models.CharField(max_length=8, unique=True)
+    label = models.CharField(max_length=60, blank=True)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_active = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-last_active"]
+        indexes = [models.Index(fields=["code"])]
+
+    def __str__(self):
+        return self.label or f"Room {self.code}"
+
+    @property
+    def player_count(self):
+        return self.players.count()
+
+
 class Player(models.Model):
     """A kid, with no personal information attached.
 
     The handle is generated, never typed, so nothing a child enters can
     become their real name. The avatar they pick decides the animal in
     the handle, which makes it easy to recognise on the leaderboard.
+
+    Handles are unique inside a room, not globally. Two rooms can both
+    have a SilverFox624 and it does not matter, because a player never
+    sees outside their own room. That is what lets this scale past the
+    ~475k handle namespace a single global pool would cap us at.
     """
 
-    handle = models.CharField(max_length=40, unique=True)
+    classroom = models.ForeignKey(
+        Classroom, related_name="players", on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
+    handle = models.CharField(max_length=40)
     avatar = models.CharField(max_length=8)
     total_points = models.PositiveIntegerField(default=0, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -127,15 +163,26 @@ class Player(models.Model):
 
     class Meta:
         ordering = ["-total_points", "created_at"]
-        indexes = [models.Index(fields=["-total_points", "created_at"])]
+        # Solo players have classroom=NULL. SQL treats NULLs as distinct,
+        # so solo handles are not forced unique against each other. That
+        # is harmless: solo players have no leaderboard to be confused on.
+        unique_together = ("classroom", "handle")
+        indexes = [
+            models.Index(fields=["classroom", "-total_points", "created_at"]),
+        ]
 
     def __str__(self):
         return f"{self.avatar} {self.handle}"
 
     @property
     def rank(self):
-        ahead = Player.objects.filter(total_points__gt=self.total_points).count()
-        return ahead + 1
+        """Place inside this player's own room."""
+        return (
+            Player.objects.filter(
+                classroom=self.classroom, total_points__gt=self.total_points
+            ).count()
+            + 1
+        )
 
 
 class Completion(models.Model):

@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import Choice, Completion, Grade, Player, Scenario, Track
+from .models import (Choice, Classroom, Completion, Grade, Player,
+                     Scenario, Track)
 
 
 class ChoiceInline(admin.TabularInline):
@@ -27,10 +28,19 @@ class ScenarioAdmin(admin.ModelAdmin):
     inlines = [ChoiceInline]
 
 
+@admin.register(Classroom)
+class ClassroomAdmin(admin.ModelAdmin):
+    list_display = ("code", "label", "player_count", "active", "created_at", "last_active")
+    list_filter = ("active",)
+    search_fields = ("code", "label")
+    readonly_fields = ("created_at", "last_active")
+
+
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ("avatar", "handle", "total_points", "created_at", "last_seen")
-    search_fields = ("handle",)
+    list_display = ("avatar", "handle", "classroom", "total_points", "created_at", "last_seen")
+    list_filter = ("classroom",)
+    search_fields = ("handle", "classroom__code", "classroom__label")
     readonly_fields = ("created_at", "last_seen")
 
 

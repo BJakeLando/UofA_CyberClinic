@@ -1013,3 +1013,85 @@ button:focus-visible {
 .panel-progress { font-size: 19px; color: var(--ink-2); font-weight: 600; }
 
 .level-done { color: var(--grass); font-size: 22px; font-weight: 700; }
+
+/* ==========================================================================
+   Rooms: landing, code entry, teacher
+   ========================================================================== */
+
+.teacher-link { text-align: center; margin: 4px 0 24px; }
+
+.teacher-link a {
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.code-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0 10px;
+}
+
+.code-input {
+  width: 100%;
+  max-width: 340px;
+  border: var(--line);
+  border-radius: 18px;
+  box-shadow: var(--drop-sm);
+  background: var(--cloud);
+  font-family: inherit;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-align: center;
+  padding: 12px 14px;
+  color: var(--ink);
+}
+
+/* the teacher's room name is ordinary prose, not a PIN */
+.code-input-text {
+  font-size: 24px;
+  letter-spacing: normal;
+  font-weight: 600;
+}
+
+.code-input::placeholder { color: #b8c4d8; }
+.code-input:focus-visible { outline: none; box-shadow: 6px 7px 0 var(--ink); }
+
+.form-error {
+  background: #ffe0e8;
+  border: 4px solid var(--ink);
+  border-radius: 16px;
+  padding: 10px 14px;
+  margin: 0 0 6px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.room-code {
+  font-size: clamp(54px, 13vw, 86px);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.05;
+  margin: 2px 0 6px;
+}
+
+.room-tag {
+  margin: 4px 0 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.solo-note {
+  text-align: center;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink-2);
+  border: 4px dashed var(--ink);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin: 0 0 18px;
+}

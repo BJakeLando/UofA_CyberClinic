@@ -353,7 +353,6 @@ class Command(BaseCommand):
                     },
                 )
                 tracks[slug] = track
-                track.scenarios.all().delete()
 
             # anything left over from before tracks existed
             grade.scenarios.filter(track__isnull=True).delete()
@@ -368,32 +367,47 @@ class Command(BaseCommand):
             made = 0
             for track, scenarios in plan:
                 for s_index, s in enumerate(scenarios):
-                    scenario = Scenario.objects.create(
-                        grade=grade,
+                    # update in place, keyed on (track, order).
+                    #
+                    # This MUST NOT delete and recreate. Completion rows
+                    # cascade from Scenario, so wiping scenarios on every
+                    # deploy would erase every player's history and let
+                    # them re-earn points they already had.
+                    scenario, _ = Scenario.objects.update_or_create(
                         track=track,
-                        stage=s["stage"],
-                        kind=s["kind"],
-                        prompt=s["prompt"],
-                        sender=s["sender"],
-                        sender_emoji=s["sender_emoji"],
-                        art=s["art"],
-                        question=s["question"],
                         order=s_index,
-                        active=True,
+                        defaults={
+                            "grade": grade,
+                            "stage": s["stage"],
+                            "kind": s["kind"],
+                            "prompt": s["prompt"],
+                            "sender": s["sender"],
+                            "sender_emoji": s["sender_emoji"],
+                            "art": s["art"],
+                            "question": s["question"],
+                            "active": True,
+                        },
                     )
                     for c_index, choice in enumerate(s["choices"]):
                         emoji, text, points, feedback = choice[:4]
                         hotspot = choice[4] if len(choice) > 4 else ""
-                        Choice.objects.create(
+                        Choice.objects.update_or_create(
                             scenario=scenario,
-                            emoji=emoji,
-                            text=text,
-                            points=points,
-                            feedback=feedback,
                             order=c_index,
-                            hotspot=hotspot,
+                            defaults={
+                                "emoji": emoji,
+                                "text": text,
+                                "points": points,
+                                "feedback": feedback,
+                                "hotspot": hotspot,
+                            },
                         )
+                    # drop answers that no longer exist in the content file
+                    scenario.choices.filter(order__gte=len(s["choices"])).delete()
                     made += 1
+
+                # drop scenes removed from the end of a track
+                track.scenarios.filter(order__gte=len(scenarios)).delete()
 
             self.stdout.write(
                 f"{grade.label}: {len(g['scenarios'])} beginner, "
