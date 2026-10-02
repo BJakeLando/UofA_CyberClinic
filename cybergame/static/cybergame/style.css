@@ -1,3 +1,28 @@
+/* Fredoka, served from our own static files. Nothing is fetched from a
+   third party, so no child's IP address leaves this app on a page load.
+   See fonts/README.md if the .woff2 files are not committed yet - until
+   then the fallback stack below is used and the app still looks fine. */
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-500.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-600.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
 /* Cyber Squad — chunky "toy game" look: thick navy outlines, solid offset
    shadows, flat bright fills. Big targets for Chromebook trackpads. */
 
@@ -1349,4 +1374,61 @@ button:focus-visible {
   font-size: 20px;
   font-weight: 700;
   color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* privacy notice                                                      */
+/* ------------------------------------------------------------------ */
+
+.privacy-link { margin: 14px 0 0; text-align: center; }
+.privacy-link a {
+  font-size: 17px;
+  color: var(--ink-2);
+}
+
+.policy { text-align: left; }
+
+.policy-date {
+  margin: -6px 0 16px;
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+.policy-lead {
+  font-size: 21px;
+  line-height: 1.45;
+  color: var(--ink);
+  margin: 0 0 22px;
+}
+
+.policy-h {
+  margin: 26px 0 8px;
+  font-size: 21px;
+  color: var(--ink);
+}
+
+.policy p {
+  margin: 0 0 12px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.policy-list {
+  margin: 0 0 12px;
+  padding-left: 22px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.policy-list li { margin-bottom: 5px; }
+
+/* deliberately ugly so it cannot be published by accident */
+.policy-todo {
+  border: 3px dashed var(--berry);
+  border-radius: 12px;
+  background: #fff3f6;
+  padding: 12px 14px;
+  font-weight: 700;
+  color: var(--ink) !important;
 }

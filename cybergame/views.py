@@ -171,6 +171,15 @@ def home(request):
 # rooms
 # --------------------------------------------------------------------------
 
+def privacy(request):
+    """Plain-language privacy notice, for parents and school reviewers.
+
+    Every claim on that page is checked against this code. If the app starts
+    collecting something new, the page is wrong until it is updated.
+    """
+    return render(request, "cybergame/privacy.html", {})
+
+
 def pending_room(request):
     """The room a player is about to join, held between join and claim."""
     rid = request.session.get("join_room_id")

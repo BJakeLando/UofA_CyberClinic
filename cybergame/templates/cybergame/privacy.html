@@ -1,0 +1,121 @@
+{% extends "cybergame/base.html" %}
+{% block title %}Privacy{% endblock %}
+
+{% comment %}
+  DRAFT - not reviewed by counsel. Two placeholders below are deliberately
+  loud so this page cannot ship by accident: the operator and the contact
+  address. Both are legal claims that the developer is not in a position to
+  make unilaterally. Confirm with the Clinic and with University counsel,
+  replace the [[ ]] blocks, then delete this comment.
+
+  Every factual claim on this page was checked against the code on
+  2026-10-02. If the app starts collecting something new, this page is
+  wrong until it is updated.
+{% endcomment %}
+
+{% block content %}
+<section class="panel policy">
+  <h1 class="panel-title">Privacy</h1>
+  <p class="policy-date">Last updated 2 October 2026</p>
+
+  <p class="policy-lead">
+    Cyber Squad is a game that teaches children how to spot online tricks.
+    It is built so that it does not need to know who your child is, and it
+    does not ask.
+  </p>
+
+  <h2 class="policy-h">What we never ask for</h2>
+  <p>
+    No name. No email address. No phone number. No login or password. No
+    photograph, video or voice recording. No home address or location.
+    There is nowhere in this game for a child to type any of those things.
+  </p>
+  <p>
+    Children do not choose their own nickname either. They pick an animal
+    picture and the game assigns a name like <strong>SilverPenguin673</strong>.
+    This is on purpose: a name a child picks often contains their real one.
+  </p>
+
+  <h2 class="policy-h">What the game does store</h2>
+  <ul class="policy-list">
+    <li>The nickname the game assigned, and the animal picture chosen</li>
+    <li>Points earned, and which rounds have been played and how many times</li>
+    <li>The room code, if a teacher set up a room for the class</li>
+    <li>The date the nickname was made and when it was last used</li>
+  </ul>
+  <p>
+    None of this is connected to a child's real identity anywhere in our
+    records. A nickname cannot be used to contact anyone.
+  </p>
+  <p>
+    The game also stores one cookie in the browser. It only keeps track of
+    which game is in progress, so a child does not lose their place. It is
+    not used for advertising and it does not follow anyone to other websites.
+  </p>
+
+  <h2 class="policy-h">The room name</h2>
+  <p>
+    Teachers who set up a room can give it a name, and that name is shown to
+    the class. <strong>Please do not put a student's name in it.</strong>
+    "Room 12 — 3rd grade" is ideal. This is the only place in the whole game
+    where anyone can type free text.
+  </p>
+
+  <h2 class="policy-h">Who else sees it</h2>
+  <p>
+    Nobody. We do not sell, rent or share this information. There is no
+    advertising in the game and no analytics or tracking services. No part of
+    a page a child loads is fetched from another company.
+  </p>
+  <p>
+    The game runs on a hosting provider, which keeps the ordinary server
+    records that every website keeps, including the internet address a
+    request came from. Those records are used to keep the service running
+    and for nothing else.
+  </p>
+
+  <h2 class="policy-h">The leaderboard</h2>
+  <p>
+    A leaderboard only ever shows the children in that one room, and only
+    their assigned nicknames and points. A child playing on their own is the
+    only person on their own leaderboard. There is no global or public board.
+  </p>
+
+  <h2 class="policy-h">What children cannot do here</h2>
+  <p>
+    There is no chat, no messaging and no way for one child to contact
+    another. Nothing a child does in this game is visible outside their own
+    classroom's room. There is no way to upload anything, and no links out to
+    other websites.
+  </p>
+
+  <h2 class="policy-h">How long it is kept, and how to have it removed</h2>
+  <p>
+    A room and its scores are kept while the class is using them, and are
+    removed on request. A parent, teacher or school can ask us to delete a
+    room and everything recorded in it, and we will do so. Because we do not
+    record who any nickname belongs to, a request needs the room code.
+  </p>
+
+  <h2 class="policy-h">Schools</h2>
+  <p>
+    This game is intended to be used in class, with a teacher present. If
+    your school needs this in writing for its own privacy review, please get
+    in touch and we will provide it.
+  </p>
+
+  <h2 class="policy-h">Who runs this and how to reach us</h2>
+  <p class="policy-todo">
+    [[ CONFIRM BEFORE PUBLISHING: the operating organisation, its postal
+    address, and a monitored contact address. ]]
+  </p>
+
+  <h2 class="policy-h">Changes</h2>
+  <p>
+    If what the game collects ever changes, this page changes with it, and
+    the date at the top will tell you when.
+  </p>
+
+  <a class="btn-back" href="{% url 'cybergame:home' %}">Back</a>
+</section>
+{% endblock %}

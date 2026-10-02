@@ -11,6 +11,7 @@ urlpatterns = [
     path("join/", views.join_room, name="join_room"),
     path("solo/", views.play_solo, name="play_solo"),
     path("teacher/", views.teacher, name="teacher"),
+    path("privacy/", views.privacy, name="privacy"),
 
     # 1. pick an avatar, get a handle
     path("squad/", views.avatar_select, name="avatar_select"),
