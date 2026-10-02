@@ -1,0 +1,49 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block content %}
+<header class="home">
+  <div class="home-badge" aria-hidden="true">🏆</div>
+  <h1 class="home-title home-title-sm">Leaderboard</h1>
+  <p class="home-sub">{{ total_players }} in the squad</p>
+</header>
+
+<ol class="board">
+  {% for r in rows %}
+    <li class="board-row{% if r.is_me %} is-me{% endif %}">
+      <span class="board-place">{{ r.place }}</span>
+      <span class="board-avatar" aria-hidden="true">{{ r.player.avatar }}</span>
+      <span class="board-body">
+        <span class="board-handle">{{ r.player.handle }}{% if r.is_me %} <em>(you)</em>{% endif %}</span>
+        <span class="board-rank">{{ r.rank_emoji }} {{ r.rank_name }}</span>
+      </span>
+      <span class="board-points">⭐ {{ r.player.total_points }}</span>
+    </li>
+  {% empty %}
+    <li class="board-empty">Nobody has played yet. Be the first!</li>
+  {% endfor %}
+</ol>
+
+{% if player and not me_in_top %}
+  <div class="board-you">
+    <span class="board-place">{{ my_rank }}</span>
+    <span class="board-avatar" aria-hidden="true">{{ player.avatar }}</span>
+    <span class="board-body">
+      <span class="board-handle">{{ player.handle }} <em>(you)</em></span>
+      <span class="board-rank">{{ rank_emoji }} {{ rank_name }}</span>
+    </span>
+    <span class="board-points">⭐ {{ player.total_points }}</span>
+  </div>
+{% endif %}
+
+{% if next_rank %}
+  <p class="board-next" data-say="{{ next_rank.need }} more stars to become {{ next_rank.name }}">
+    {{ next_rank.need }} more ⭐ to become {{ next_rank.emoji }} {{ next_rank.name }}
+  </p>
+{% endif %}
+
+<div class="done-actions">
+  <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+</div>
+{% endblock %}

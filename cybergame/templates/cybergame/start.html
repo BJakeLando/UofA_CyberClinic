@@ -3,12 +3,15 @@
 {% block title %}Grade {{ grade.number }} {{ track.get_difficulty_display }} — Cyber Squad{% endblock %}
 
 {% block content %}
+{% include "cybergame/_chip.html" %}
+
 <section class="panel grade-{{ grade.number }}-accent">
   <div class="panel-buddy" aria-hidden="true">{{ buddy }}</div>
   <h1 class="panel-title">Grade {{ grade.number }}</h1>
   <p class="track-tag"><span aria-hidden="true">{{ track.emoji }}</span> {{ track.get_difficulty_display }}</p>
   {% if grade.intro %}<p class="panel-line">{{ grade.intro }}</p>{% endif %}
   <p class="panel-line">{{ total }} rounds. Win ⭐ stars!</p>
+  {% if earned %}<p class="panel-line panel-progress">You have ⭐ {{ earned }} of {{ possible }} here already.</p>{% endif %}
   <a class="btn btn-go" href="{% url 'cybergame:question' grade.number track.difficulty 0 %}">Start</a>
   <a class="btn-back" href="{% url 'cybergame:difficulty_select' grade.number %}">Change level</a>
 </section>

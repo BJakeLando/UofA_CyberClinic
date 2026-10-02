@@ -1,0 +1,38 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}Join the Cyber Squad{% endblock %}
+
+{% block content %}
+<header class="home">
+  <div class="home-badge" aria-hidden="true">🛡️</div>
+  <h1 class="home-title">Cyber Squad</h1>
+  <p class="home-sub" data-say="Pick your animal. We will give you a secret squad name.">
+    Pick your animal
+  </p>
+</header>
+
+{% if player %}
+  <p class="already">
+    You are already <strong>{{ player.avatar }} {{ player.handle }}</strong>.
+    <a href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+    or pick a new animal below.
+  </p>
+{% endif %}
+
+<form method="post" action="{% url 'cybergame:claim_avatar' %}">
+  {% csrf_token %}
+  <div class="avatars">
+    {% for a in avatars %}
+      <button class="avatar-pick" type="submit" name="avatar" value="{{ a.emoji }}"
+              aria-label="{{ a.word }}">
+        <span class="avatar-emoji" aria-hidden="true">{{ a.emoji }}</span>
+        <span class="avatar-word">{{ a.word }}</span>
+      </button>
+    {% endfor %}
+  </div>
+</form>
+
+<p class="privacy-note" data-say="We never ask for your real name.">
+  🔒 We never ask for your real name.
+</p>
+{% endblock %}

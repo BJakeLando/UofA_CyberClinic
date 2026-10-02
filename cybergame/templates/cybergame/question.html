@@ -127,6 +127,7 @@
       <div class="result-emoji" aria-hidden="true">{{ result_emoji }}</div>
       <p class="result-head" data-say="{{ result_head }}">{{ result_head }}</p>
       <p class="result-body" data-say="{{ chosen.feedback }}">{{ chosen.feedback }}</p>
+      {% if gained %}<p class="gained" data-say="Plus {{ gained }} stars">+{{ gained }} ⭐</p>{% endif %}
 
       {% if tier != "best" and best_choice %}
         <div class="best-pick" data-say="The best move is: {{ best_choice.text }}">

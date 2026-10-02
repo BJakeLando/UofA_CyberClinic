@@ -3,6 +3,8 @@
 {% block title %}Grade {{ grade.number }} — Pick a level{% endblock %}
 
 {% block content %}
+{% include "cybergame/_chip.html" %}
+
 <header class="home">
   <div class="home-badge" aria-hidden="true">{{ buddy }}</div>
   <h1 class="home-title home-title-sm">Grade {{ grade.number }}</h1>
@@ -18,7 +20,10 @@
           <span class="level-name">{{ t.name }}</span>
           <span class="level-blurb">{{ t.blurb }}</span>
         </span>
-        <span class="level-count">{{ t.count }}</span>
+        <span class="level-count">
+          {% if t.done %}<span class="level-done" aria-label="Finished">✓</span>
+          {% else %}{{ t.earned }}/{{ t.possible }}{% endif %}
+        </span>
       </a>
     {% else %}
       <span class="level level-soon" aria-disabled="true">

@@ -109,3 +109,58 @@ class Choice(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class Player(models.Model):
+    """A kid, with no personal information attached.
+
+    The handle is generated, never typed, so nothing a child enters can
+    become their real name. The avatar they pick decides the animal in
+    the handle, which makes it easy to recognise on the leaderboard.
+    """
+
+    handle = models.CharField(max_length=40, unique=True)
+    avatar = models.CharField(max_length=8)
+    total_points = models.PositiveIntegerField(default=0, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_seen = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-total_points", "created_at"]
+        indexes = [models.Index(fields=["-total_points", "created_at"])]
+
+    def __str__(self):
+        return f"{self.avatar} {self.handle}"
+
+    @property
+    def rank(self):
+        ahead = Player.objects.filter(total_points__gt=self.total_points).count()
+        return ahead + 1
+
+
+class Completion(models.Model):
+    """One scenario, once per player.
+
+    A scenario can only ever be scored once. Replaying it to fix a miss
+    raises the score to the better answer; it never adds a second helping
+    and it never takes points away.
+    """
+
+    player = models.ForeignKey(Player, related_name="completions", on_delete=models.CASCADE)
+    scenario = models.ForeignKey(Scenario, related_name="completions", on_delete=models.CASCADE)
+    points = models.PositiveSmallIntegerField(default=0)
+    best_possible = models.PositiveSmallIntegerField(default=0)
+    attempts = models.PositiveSmallIntegerField(default=1)
+    first_try_best = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("player", "scenario")
+        indexes = [models.Index(fields=["player", "scenario"])]
+
+    def __str__(self):
+        return f"{self.player.handle}: {self.points}/{self.best_possible}"
+
+    @property
+    def is_perfect(self):
+        return self.points >= self.best_possible

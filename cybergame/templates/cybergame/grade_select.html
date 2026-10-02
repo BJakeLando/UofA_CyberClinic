@@ -1,6 +1,8 @@
 {% extends "cybergame/base.html" %}
 
 {% block content %}
+{% include "cybergame/_chip.html" %}
+
 <header class="home">
   <div class="home-badge" aria-hidden="true">🛡️</div>
   <h1 class="home-title">Cyber Squad</h1>
@@ -18,4 +20,8 @@
     <p class="empty">No grades yet. Run: python manage.py seed_content</p>
   {% endfor %}
 </nav>
+
+<div class="done-actions">
+  <a class="btn btn-next" href="{% url 'cybergame:leaderboard' %}">🏆 Leaderboard</a>
+</div>
 {% endblock %}

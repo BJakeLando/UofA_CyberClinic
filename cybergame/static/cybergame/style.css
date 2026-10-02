@@ -789,3 +789,227 @@ button:focus-visible {
   .game-world { height: 210px; }
   .ad-text { font-size: 24px; }
 }
+
+/* ==========================================================================
+   Squad card: avatar picker, handle, player chip
+   ========================================================================== */
+
+.avatars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 14px;
+  margin: 0 0 24px;
+}
+
+.avatar-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--cloud);
+  border: var(--line);
+  border-radius: 20px;
+  box-shadow: var(--drop-sm);
+  padding: 14px 8px 10px;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.avatar-pick:hover,
+.avatar-pick:focus-visible {
+  background: #fff7d6;
+  transform: translate(-2px, -3px);
+  box-shadow: 7px 8px 0 var(--ink);
+}
+.avatar-pick:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+
+.avatar-emoji { font-size: 50px; line-height: 1; }
+.avatar-word  { font-size: 17px; font-weight: 600; color: var(--ink-2); }
+
+.privacy-note {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin: 0 0 20px;
+}
+
+.already {
+  text-align: center;
+  font-size: 19px;
+  margin: 0 0 18px;
+  color: var(--ink-2);
+}
+
+/* the reveal card after picking */
+.card-reveal { text-align: center; }
+.card-label  { margin: 0; font-size: 20px; font-weight: 600; color: var(--ink-2); }
+.card-avatar { font-size: 92px; line-height: 1.05; }
+
+.card-handle {
+  margin: 2px 0 2px;
+  font-size: clamp(34px, 7vw, 50px);
+  font-weight: 700;
+  line-height: 1.05;
+  word-break: break-word;
+}
+
+.card-rank {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+/* the chip that follows the player around */
+.chip-row { display: flex; justify-content: center; margin: 0 0 18px; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--cloud);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: var(--drop-sm);
+  padding: 6px 16px 6px 10px;
+  text-decoration: none;
+  color: inherit;
+  max-width: 100%;
+}
+
+.chip-avatar { font-size: 32px; line-height: 1; }
+.chip-body   { display: flex; flex-direction: column; min-width: 0; }
+
+.chip-handle {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chip-rank   { font-size: 15px; font-weight: 600; color: var(--ink-2); }
+
+.chip-points {
+  /* white like .stars-pill: a gold star on a yellow pill vanishes */
+  background: var(--cloud);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 12px 3px;
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Leaderboard
+   ========================================================================== */
+
+.board { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+
+.board-row,
+.board-you {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--cloud);
+  border: var(--line);
+  border-radius: 18px;
+  box-shadow: var(--drop-sm);
+  padding: 10px 14px;
+}
+
+.board-row.is-me,
+.board-you { background: #fff3c9; }
+
+.board-you { margin: 0 0 18px; border-style: dashed; }
+
+.board-place {
+  flex: 0 0 auto;
+  min-width: 42px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.board-row:nth-child(1) .board-place { color: #d99b00; }
+.board-row:nth-child(2) .board-place { color: #7f8c9b; }
+.board-row:nth-child(3) .board-place { color: #b2703a; }
+
+.board-avatar { font-size: 36px; line-height: 1; }
+.board-body   { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.board-handle {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.board-handle em { font-style: normal; color: var(--ink-2); font-weight: 600; }
+
+.board-rank { font-size: 16px; font-weight: 600; color: var(--ink-2); }
+
+.board-points {
+  /* white like .stars-pill: a gold star on a yellow pill vanishes */
+  background: var(--cloud);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  padding: 3px 14px 4px;
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.board-empty {
+  text-align: center;
+  padding: 26px 16px;
+  font-size: 20px;
+  color: var(--ink-2);
+  border: 4px dashed var(--ink);
+  border-radius: 18px;
+}
+
+.board-next,
+.to-next {
+  text-align: center;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+}
+
+/* ==========================================================================
+   Scoring feedback and the fix-your-misses button
+   ========================================================================== */
+
+.gained {
+  margin: 8px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a8a4a;
+}
+
+.btn-fix {
+  display: inline-block;
+  background: var(--grass);
+  margin: 4px 0 10px;
+}
+
+.all-clear {
+  margin: 10px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a8a4a;
+}
+
+.panel-progress { font-size: 19px; color: var(--ink-2); font-weight: 600; }
+
+.level-done { color: var(--grass); font-size: 22px; font-weight: 700; }

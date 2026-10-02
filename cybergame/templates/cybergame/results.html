@@ -3,6 +3,8 @@
 {% block title %}Grade {{ grade.number }} — Stars{% endblock %}
 
 {% block content %}
+{% include "cybergame/_chip.html" %}
+
 <section class="panel" id="done">
   <div class="stars-row" aria-label="{{ stars }} out of 3 stars">
     {% for on in star_slots %}<span class="big-star{% if on %} is-on{% endif %}" aria-hidden="true">⭐</span>{% endfor %}
@@ -10,6 +12,23 @@
 
   <h1 class="panel-title" data-say="{{ cheer }}">{{ cheer }}</h1>
   <p class="score" data-say="You got {{ score }} out of {{ total_possible }} stars.">{{ score }} <span class="score-of">/ {{ total_possible }}</span></p>
+
+  {% if perfect %}
+    <p class="all-clear" data-say="You aced every round in this level.">
+      ✓ You aced every round here
+    </p>
+  {% else %}
+    <a class="btn btn-fix" href="{% url 'cybergame:fix_next' grade.number track.difficulty %}"
+       data-say="Go back and fix {{ missed_count }} rounds for more stars.">
+      🔁 Fix my {{ missed_count }} miss{{ missed_count|pluralize:"es" }} for more ⭐
+    </a>
+  {% endif %}
+
+  {% if next_rank %}
+    <p class="to-next" data-say="{{ next_rank.need }} more stars to become {{ next_rank.name }}">
+      {{ next_rank.need }} more ⭐ to become {{ next_rank.emoji }} {{ next_rank.name }}
+    </p>
+  {% endif %}
 
   <p class="rules-hint" data-say="Point at a rule to learn more about it.">Point at a rule to learn more</p>
 
@@ -29,7 +48,7 @@
 
   <div class="done-actions">
     <button type="button" class="say-btn" data-scope="#done" aria-label="Read out loud">🔊</button>
-    <a class="btn btn-go" href="{% url 'cybergame:start_track' grade.number track.difficulty %}">Play again</a>
+    <a class="btn btn-go" href="{% url 'cybergame:leaderboard' %}">🏆 Leaderboard</a>
   </div>
   <a class="btn-back" href="{% url 'cybergame:difficulty_select' grade.number %}">Try another level</a>
 </section>

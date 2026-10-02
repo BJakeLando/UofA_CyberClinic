@@ -1,0 +1,21 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}{{ player.handle }}{% endblock %}
+
+{% block content %}
+<section class="panel card-reveal" id="card">
+  <p class="card-label" data-say="Your squad name is">Your squad name is</p>
+  <div class="card-avatar" aria-hidden="true">{{ player.avatar }}</div>
+  <h1 class="card-handle" data-say="{{ player.handle }}">{{ player.handle }}</h1>
+  <p class="card-rank">{{ rank_emoji }} {{ rank_name }}</p>
+  <p class="panel-line" data-say="Remember your animal. That is how you find yourself on the leaderboard.">
+    Remember your animal. That is how you find yourself on the leaderboard.
+  </p>
+
+  <div class="result-actions">
+    <button type="button" class="say-btn" data-scope="#card" aria-label="Read out loud">🔊</button>
+    <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Let's go</a>
+  </div>
+  <a class="btn-back" href="{% url 'cybergame:avatar_select' %}">Pick a different animal</a>
+</section>
+{% endblock %}

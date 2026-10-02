@@ -1,0 +1,12 @@
+{% if player %}
+<div class="chip-row">
+  <a class="chip" href="{% url 'cybergame:leaderboard' %}">
+    <span class="chip-avatar" aria-hidden="true">{{ player.avatar }}</span>
+    <span class="chip-body">
+      <span class="chip-handle">{{ player.handle }}</span>
+      <span class="chip-rank">{{ rank_emoji }} {{ rank_name }}</span>
+    </span>
+    <span class="chip-points">⭐ {{ player.total_points }}</span>
+  </a>
+</div>
+{% endif %}
