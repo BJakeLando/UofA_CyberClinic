@@ -17,6 +17,24 @@
     <button class="btn btn-go" type="submit">Make it</button>
   </form>
 
+  {% if my_rooms %}
+    <section class="rooms">
+      <h2 class="rooms-title">Rooms you made on this device</h2>
+      {% for r in my_rooms %}
+        <div class="room-row">
+          <span class="room-row-code">{{ r.code }}</span>
+          <span class="room-row-label">{{ r.label|default:"Untitled room" }}</span>
+          <a class="room-row-board"
+             href="{% url 'cybergame:leaderboard' %}?room={{ r.code }}">Board</a>
+        </div>
+      {% endfor %}
+      <p class="rooms-note">
+        These are remembered on this device only. If you close the browser or
+        switch computers, make a new room — it takes one tap.
+      </p>
+    </section>
+  {% endif %}
+
   <p class="privacy-note">
     🔒 Students never type a name. The game assigns one.
     Please don't put a student's name in the room name.

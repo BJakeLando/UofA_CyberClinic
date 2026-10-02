@@ -6,7 +6,13 @@
 <header class="home">
   <div class="home-badge" aria-hidden="true">🏆</div>
   <h1 class="home-title home-title-sm">Leaderboard</h1>
-  {% if room %}
+  {% if as_teacher %}
+    <p class="home-sub">
+      Room <strong>{{ room.code }}</strong>
+      {% if room.label %} · {{ room.label }}{% endif %}
+      · {{ total_players }} playing
+    </p>
+  {% elif room %}
     <p class="home-sub">{{ room }} · {{ total_players }} playing</p>
   {% else %}
     <p class="home-sub">Just you</p>
@@ -54,6 +60,11 @@
 {% endif %}
 
 <div class="done-actions">
-  <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+  {% if as_teacher %}
+    <a class="btn btn-go" href="{% url 'cybergame:leaderboard' %}?room={{ room.code }}">Refresh</a>
+    <a class="btn btn-ghost" href="{% url 'cybergame:teacher' %}">Rooms</a>
+  {% else %}
+    <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+  {% endif %}
 </div>
 {% endblock %}

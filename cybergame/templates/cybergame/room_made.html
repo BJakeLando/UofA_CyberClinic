@@ -11,8 +11,14 @@
     Write this on the board. Students tap <strong>Join my class</strong> and type it in.
   </p>
 
+  <p class="panel-line rooms-note">
+    You can find this code again any time under <strong>I'm a teacher</strong>,
+    as long as you're on this device.
+  </p>
+
   <div class="result-actions">
     <button type="button" class="say-btn" data-scope="#made" aria-label="Read out loud">🔊</button>
+    <a class="btn btn-ghost" href="{% url 'cybergame:leaderboard' %}?room={{ room.code }}">Live board</a>
     <a class="btn btn-go" href="{% url 'cybergame:home' %}">Done</a>
   </div>
 </section>

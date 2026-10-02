@@ -153,9 +153,18 @@ def _player_context(player):
 # --------------------------------------------------------------------------
 
 def home(request):
-    if current_player(request):
-        return redirect("cybergame:grade_select")
-    return render(request, "cybergame/landing.html", {})
+    """The chooser. Always reachable.
+
+    This used to redirect to grade select as soon as the session held a
+    player, which meant that after one solo game there was no way back to
+    "join my class" or "I'm a teacher" short of clearing cookies. Now the
+    landing page shows a Keep Playing button instead of hiding itself.
+    """
+    return render(
+        request,
+        "cybergame/landing.html",
+        {"my_rooms": my_rooms(request), **_player_context(current_player(request))},
+    )
 
 
 # --------------------------------------------------------------------------
@@ -166,6 +175,29 @@ def pending_room(request):
     """The room a player is about to join, held between join and claim."""
     rid = request.session.get("join_room_id")
     return Classroom.objects.filter(pk=rid, active=True).first() if rid else None
+
+
+def my_rooms(request):
+    """Rooms made from this browser, newest first.
+
+    A teacher who makes a room needs the code back after they navigate
+    away, so we remember the ids in their session. Deliberately session
+    scoped: nothing identifies a teacher, so there is nothing to look a
+    room up by, and a room that outlives the session is a room nobody is
+    watching. Make a fresh one next lesson.
+    """
+    ids = request.session.get("my_room_ids") or []
+    if not ids:
+        return []
+    rooms = {r.pk: r for r in Classroom.objects.filter(pk__in=ids, active=True)}
+    return [rooms[i] for i in reversed(ids) if i in rooms]
+
+
+def remember_room(request, room):
+    ids = request.session.get("my_room_ids") or []
+    if room.pk not in ids:
+        ids.append(room.pk)
+        request.session["my_room_ids"] = ids[-20:]
 
 
 def join_room(request):
@@ -187,13 +219,14 @@ def play_solo(request):
 
 
 def teacher(request):
-    """Make a room and get a code to read out."""
+    """Make a room, and get the code back afterwards."""
     if request.method == "POST":
         label = (request.POST.get("label") or "").strip()[:60]
         taken = set(Classroom.objects.values_list("code", flat=True))
         room = Classroom.objects.create(code=make_room_code(taken), label=label)
+        remember_room(request, room)
         return render(request, "cybergame/room_made.html", {"room": room})
-    return render(request, "cybergame/teacher.html", {})
+    return render(request, "cybergame/teacher.html", {"my_rooms": my_rooms(request)})
 
 
 def avatar_select(request):
@@ -229,8 +262,21 @@ def claim_avatar(request):
 
 
 def leave(request):
+    """Let go of this squad name and go back to the chooser.
+
+    The Player row and its points stay in the database and on the room's
+    board; this session just stops being that player. There is no way
+    back into it, which the confirm screen says out loud.
+
+    POST only. As a GET this was one browser link prefetch away from
+    silently throwing out a kid's squad name and their stars.
+    """
+    if request.method != "POST":
+        return redirect("cybergame:home")
+
     request.session.pop("player_id", None)
-    return redirect("cybergame:avatar_select")
+    request.session.pop("join_room_id", None)
+    return redirect("cybergame:home")
 
 
 # --------------------------------------------------------------------------
@@ -429,6 +475,16 @@ def leaderboard(request):
     player = current_player(request)
     room = player.classroom if player else None
 
+    # A teacher has no player, so without this they saw an empty board for
+    # their own class. ?room=<code> is checked against the rooms this
+    # browser actually made, so a guessed code cannot open someone else's.
+    as_teacher = False
+    wanted = normalise_code(request.GET.get("room"))
+    if wanted:
+        mine = {r.code: r for r in my_rooms(request)}
+        if wanted in mine:
+            room, player, as_teacher = mine[wanted], None, True
+
     # One indexed scan over a single room, never a global sort.
     top = list(Player.objects.filter(classroom=room)[:20]) if (player or room) else []
 
@@ -439,9 +495,13 @@ def leaderboard(request):
                      "rank_emoji": emoji, "is_me": player and p.pk == player.pk})
 
     me_in_top = any(r["is_me"] for r in rows)
-    return render(request, "cybergame/leaderboard.html",
-                  {"rows": rows, "me_in_top": me_in_top,
-                   "my_rank": player.rank if player else None,
-                   "total_players": Player.objects.filter(classroom=room).count(),
-                   "solo": player is not None and room is None,
-                   **_player_context(player)})
+    context = {"rows": rows, "me_in_top": me_in_top,
+               "my_rank": player.rank if player else None,
+               "total_players": Player.objects.filter(classroom=room).count(),
+               "solo": player is not None and room is None,
+               "as_teacher": as_teacher,
+               **_player_context(player)}
+    if as_teacher:
+        # _player_context only carries a room when there is a player
+        context["room"] = room
+    return render(request, "cybergame/leaderboard.html", context)

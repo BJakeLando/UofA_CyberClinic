@@ -8,6 +8,25 @@
   <p class="home-sub" data-say="Learn how to spot online tricks.">Learn how to spot online tricks</p>
 </header>
 
+{% if player %}
+  <section class="keep-playing">
+    <p class="keep-line">
+      <span class="keep-ava" aria-hidden="true">{{ player.avatar }}</span>
+      You are <strong>{{ player.handle }}</strong> — {{ player.total_points }} ⭐
+      {% if room %}<span class="keep-room">in room {{ room.code }}</span>{% endif %}
+    </p>
+    <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+    <form method="post" action="{% url 'cybergame:leave' %}" class="leave-form">
+      {% csrf_token %}
+      <button class="btn-leave" type="submit">Start over as someone else</button>
+    </form>
+    <p class="leave-note">
+      Starting over gives you a brand new name and 0 stars. Your old name stays
+      on the leaderboard, but you can't get back into it.
+    </p>
+  </section>
+{% endif %}
+
 <nav class="levels" aria-label="How do you want to start?">
   <a class="level level-beginner" href="{% url 'cybergame:join_room' %}">
     <span class="level-emoji" aria-hidden="true">🔢</span>
@@ -25,6 +44,20 @@
     </span>
   </a>
 </nav>
+
+{% if my_rooms %}
+  <section class="rooms">
+    <h2 class="rooms-title">Your rooms</h2>
+    {% for r in my_rooms %}
+      <div class="room-row">
+        <span class="room-row-code">{{ r.code }}</span>
+        <span class="room-row-label">{{ r.label|default:"Untitled room" }}</span>
+        <a class="room-row-board"
+           href="{% url 'cybergame:leaderboard' %}?room={{ r.code }}">Board</a>
+      </div>
+    {% endfor %}
+  </section>
+{% endif %}
 
 <p class="teacher-link">
   <a href="{% url 'cybergame:teacher' %}">👩‍🏫 I'm a teacher — make a room</a>
