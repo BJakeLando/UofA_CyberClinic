@@ -132,6 +132,12 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# 0001_initial created every primary key as BigAutoField, so the live columns
+# are bigint. With this unset Django falls back to AutoField, decides every id
+# column needs altering, and warns on every deploy that there are unapplied
+# model changes. Pinned to what the database actually has, so it is a no-op.
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},

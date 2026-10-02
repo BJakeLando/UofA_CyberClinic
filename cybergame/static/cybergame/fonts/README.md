@@ -6,10 +6,24 @@ persistent identifier, and handing one to a third party is outside COPPA's
 "support for internal operations" exception, so the Google links were removed
 from `base.html`.
 
-Until the four files below are committed here, the app falls back to a rounded
-system font. It looks fine; it just isn't Fredoka.
+The app currently falls back to a rounded system stack
+(`"Trebuchet MS", "Segoe UI", system-ui, sans-serif`). It looks fine; it just
+isn't Fredoka.
 
-To add them (run from the repo root):
+## Why the @font-face rules are not in style.css yet
+
+Production serves static files through WhiteNoise's
+`CompressedManifestStaticFilesStorage`. That backend parses every CSS file at
+`collectstatic` time and rewrites each URL it finds to the hashed filename.
+
+**A `url()` pointing at a file that does not exist is a hard error, not a
+warning.** `collectstatic` fails, the release command fails, and the container
+crash-loops. So the `@font-face` block and the font files have to land in the
+same commit. Do not add one without the other.
+
+## Adding the font
+
+Step 1 — fetch the four weights into this directory:
 
     cd cybergame/static/cybergame/fonts
     for w in 400 500 600 700; do
@@ -20,8 +34,41 @@ To add them (run from the repo root):
     done
     ls -l fredoka-*.woff2        # four files, roughly 30-60 KB each
 
-Then commit them. No CSS change is needed; the @font-face rules at the top of
-style.css already point at these filenames.
+If any file is 0 bytes, stop — do not commit, or the deploy will fail.
+
+Step 2 — paste this at the very top of `../style.css`:
+
+```css
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-400.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-500.woff2") format("woff2");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-600.woff2") format("woff2");
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Fredoka";
+  src: url("fonts/fredoka-700.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+```
+
+Step 3 — prove it before pushing. This is the exact step that fails in
+production, and it does not run during normal local development:
+
+    python manage.py collectstatic --noinput
+
+If that succeeds, the deploy will too.
+
+## Licence
 
 Fredoka is licensed under the SIL Open Font License 1.1, which permits
-redistribution, including bundled in a repository like this.
+redistribution, including bundled in a repository like this one.

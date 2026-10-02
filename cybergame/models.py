@@ -134,7 +134,10 @@ class Classroom(models.Model):
 
     class Meta:
         ordering = ["-last_active"]
-        indexes = [models.Index(fields=["code"])]
+        # Names pinned to what the migrations already created. Without this
+        # Django recomputes the hash suffix, decides the index was renamed,
+        # and every deploy warns about unapplied model changes.
+        indexes = [models.Index(fields=["code"], name="cybergame_c_code_8e21f7_idx")]
 
     def __str__(self):
         return self.label or f"Room {self.code}"
@@ -174,7 +177,8 @@ class Player(models.Model):
         # is harmless: solo players have no leaderboard to be confused on.
         unique_together = ("classroom", "handle")
         indexes = [
-            models.Index(fields=["classroom", "-total_points", "created_at"]),
+            models.Index(fields=["classroom", "-total_points", "created_at"],
+                         name="cybergame_p_classro_3b9c4e_idx"),
         ]
 
     def __str__(self):
@@ -209,7 +213,8 @@ class Completion(models.Model):
 
     class Meta:
         unique_together = ("player", "scenario")
-        indexes = [models.Index(fields=["player", "scenario"])]
+        indexes = [models.Index(fields=["player", "scenario"],
+                                name="cybergame_c_player__0a7b2d_idx")]
 
     def __str__(self):
         return f"{self.player.handle}: {self.points}/{self.best_possible}"
