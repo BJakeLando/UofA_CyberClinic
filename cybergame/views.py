@@ -11,10 +11,6 @@ GRADE_BUDDIES = {3: "🐢", 4: "🦊", 5: "🦉", 6: "🦁"}
 # Groups get a picture by theme instead (Grade.theme)
 GROUP_BUDDIES = {"girl-scouts": "🏕️"}
 
-# What stands around in the game world behind a device pop-up: s1, s2, s3
-SPRITES = ("🧍", "🌳", "☁️")
-GROUP_SPRITES = {"girl-scouts": ("🧍", "⛺", "🌲")}
-
 
 def buddy_for(grade):
     if grade.is_group:
@@ -449,7 +445,6 @@ def question(request, number, difficulty, index):
                    "chosen": chosen, "best_choice": best_choice, "tier": tier,
                    "result_emoji": result_emoji, "result_head": result_head,
                    "gained": gained, "dots": dots,
-                   "sprites": GROUP_SPRITES.get(grade.theme, SPRITES),
                    "number_shown": index + 1, "total": len(scenarios),
                    "next_index": index + 1,
                    "is_last": index + 1 >= len(scenarios),

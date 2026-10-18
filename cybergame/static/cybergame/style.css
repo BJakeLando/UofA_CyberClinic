@@ -141,8 +141,9 @@ body {
 
 .group-girl-scouts { background: var(--forest); color: var(--cloud); }
 
-/* inside the game: the bar over the tablet picks up the group's colour */
-.theme-girl-scouts .game-bar { background: var(--forest); }
+/* inside the game: the chat and voice screens pick up the group's colour */
+.theme-girl-scouts .screen-bar { background: var(--forest); }
+.theme-girl-scouts .msg-name   { color: var(--forest); }
 
 .empty { grid-column: 1 / -1; text-align: center; }
 

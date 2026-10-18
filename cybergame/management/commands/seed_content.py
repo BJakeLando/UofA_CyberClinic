@@ -411,55 +411,69 @@ DEVICE_CONTENT = {
 # ---------------------------------------------------------------------------
 # Groups - played instead of a grade.
 #
-# Girl Scouts is 6th grade Advanced with a scout theme: the same six scenes
-# in the same order, the same trick in each one, the same hotspots and the
-# same points. Only the wording is themed (badges, troop friends, cookie
-# orders, getting picked up after a meeting). If a 6th grade Advanced scene
-# changes, change its twin here too.
+# Girl Scouts uses the Beginner style (chat, voice and plain questions with
+# worded answer buttons). It opens with a hiking meet-up, then follows 5th
+# grade Beginner scene for scene, reworded around trail friends, troop
+# chats, badges and cookie sales. The fake troop leader sits where 5th
+# grade's fake game helper is.
+#
+# Unlike the grades, no best answer here involves replying. "Say no" is a
+# reply, and Wagner's rule is that kids shouldn't engage at all; a group is
+# exactly where he is putting this in front of kids. Where 5th grade has
+# "Say no" for 1 point, this has a non-reply (block, don't answer) instead.
 #
 # No logos, cookie names or official program names: badges, troops and
 # cookie sales are generic enough to say plainly, the rest stays out.
 # ---------------------------------------------------------------------------
 
-TEXT_PARENT_SCOUTS = T(
-    "+1 520-555-0163",
-    "Hey this is Dad 😊 I got a new phone. Troop meeting is over, can you "
-    "come outside and meet me?",
-    ("💬", "OK, coming!",
-     "Anyone can type that they are your dad. That number is not his."),
-    DELETE_IT,
-    ("📞", "Call DADDY",
-     "You called the number already saved for your dad, and asked your family "
-     "code word if you have one. That is exactly right."),
-    hint="Your dad's real number is saved under DADDY. This text came from a "
-         "random number.",
-)
-
-SCOUTS_DEVICE = [
-    D("Pixel Park", "SEND A PHOTO OF YOURSELF TO EARN A SECRET BADGE", "📸",
-      ("📸", "Send a photo", "No real troop or game ever needs a picture of you. Never send one."),
-      CLOSE, REPORT),
-    D("Pixel Park", "THIS IS YOUR TROOP LEADER. VERIFY YOUR PASSWORD.", "🛡️",
-      ("🛡️", "Verify password", "Looking official is the whole trick. Real leaders never ask."),
-      CLOSE, REPORT),
-    D("Pixel Park", "YOUR TROOP FRIEND SENT YOU 5,000 COINS! TAP TO ACCEPT", "🎁",
-      ("🎁", "Accept the gift", "Check with your friend at your next meeting. Accounts get stolen."),
-      CLOSE, REPORT),
-    D("Pixel Park", "ENTER THE CODE FROM YOUR PHONE TO SAVE YOUR COOKIE ORDERS", "🍪",
-      ("🔢", "Enter the code", "That code is the lock on your account. It stays with you."),
-      CLOSE, REPORT),
-    D("Pixel Park", "GET EVERY BADGE NOW - TAP TO INSTALL", "🎖️",
-      ("⬇️", "Install it", "Badges are earned. Cheat downloads are how devices get hacked."),
-      CLOSE, REPORT),
-    TEXT_PARENT_SCOUTS,  # last, same as 6th grade
+SCOUTS = [
+    S("chat", "Let's go hiking! Can you meet me somewhere in person?", sender="TrailBuddy", sender_emoji="🥾", choices=MEET(
+        ("🚶", "Go meet them", 0, "Never go meet someone you only know online."),
+        ("🙋", "Tell family or teacher", 2, "Perfect! Don't reply. Tell someone you trust."),
+    )),
+    S("chat", "Let's talk on a different app. Add me there!", sender="CampPal", sender_emoji="🎒", choices=[
+        ("🚫", "Block them", 1, "Good! Now tell a teacher or family member too."),
+        ("🙋", "Tell family or teacher", 2, "Perfect! This one is important to tell."),
+        ("📱", "Add them", 0, "Other apps are less safe. Stay put."),
+    ]),
+    S("chat", "This is your troop leader, can you tell me your password?", sender="TroopLeader", sender_emoji="🧭", stage="recognize", choices=[
+        ("🔑", "Send my password", 0, "Real troop leaders never ask for your password."),
+        ("🙋", "Tell family or teacher", 2, "Yes! You saw the trick."),
+        ("🚩", "Report them", 1, "Good! Tell a teacher or family member too."),
+    ]),
+    S("chat", "I'll give you a secret badge. Don't tell your parents!", sender="BadgeTrader", sender_emoji="🎖️", choices=[
+        ("🙋", "Tell a parent", 2, "Yes! Secrets from parents are a red flag."),
+        ("🤝", "Take the deal", 0, "\"Don't tell your parents\" means tell them!"),
+        ("🤐", "Don't answer", 1, "Good! Now tell your parents too."),
+    ]),
+    S("chat", "I want to buy 10 boxes of cookies! What's your home address?", sender="CookieFan", sender_emoji="🍪", stage="recognize", choices=[
+        ("🏠", "Send my address", 0, "Never share your address online."),
+        ("🤐", "Don't answer", 1, "Good! Tell a teacher or family member too."),
+        ("🙋", "Tell family or teacher", 2, "Perfect! Your family can handle cookie orders."),
+    ]),
+    S("voice", "Hi honey! Leave your troop meeting and meet me at the corner.", sender="Sounds like Mom", sender_emoji="🎤", stage="recognize", choices=[
+        ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
+        ("🙋", "Ask my troop leader", 2, "Yes! Check first. Use your family code word."),
+        ("⏳", "Wait and see", 1, "Good to wait. Asking your troop leader is best."),
+    ]),
+    S("ask", "A troop friend says something bad happened online. \"Don't tell anyone!\"", art="🤝", stage="report", choices=[
+        ("🤐", "Keep the secret", 0, "Good friends get help for friends."),
+        ("💛", "Tell my troop leader", 2, "Yes! That's what a real friend does."),
+        ("🤷", "Let them handle it", 0, "Some things are too big for kids alone."),
+    ]),
+    S("ask", "Something got downloaded on your family's tablet.", art="📱", stage="recovery", choices=[
+        ("🗑️", "Delete it, say nothing", 0, "Always tell! Your family can help fix it."),
+        ("🙋", "Tell my family", 2, "Perfect! Telling fast is the best."),
+        ("⏰", "Tell later", 1, "Better to tell right now."),
+    ]),
 ]
 
 # Group numbers start at 100 so they never collide with a grade (see Grade).
 GROUPS = [
     {
         "number": 100, "label": "Girl Scouts",
-        "intro": "No hints here. Tap the screen like it's real.",
-        "tracks": {"advanced": SCOUTS_DEVICE},
+        "intro": "Trail friends, troop chats and cookie sales. Spot the tricks!",
+        "tracks": {"beginner": SCOUTS},
     },
 ]
 
@@ -528,6 +542,11 @@ class Command(BaseCommand):
 
         # anything left over from before tracks existed
         grade.scenarios.filter(track__isnull=True).delete()
+
+        # A level dropped from the content goes away, with its scenes and
+        # everyone's completions on them. Stars already earned there stay on
+        # players' totals. (Girl Scouts used to be an Advanced tablet level.)
+        grade.tracks.exclude(difficulty__in=list(content)).delete()
 
         plan = [(tracks[slug], content[slug]) for slug in tracks]
 
