@@ -21,6 +21,18 @@
   {% endfor %}
 </nav>
 
+{% if groups %}
+  <p class="groups-label">Or play with your group</p>
+  <nav class="groups" aria-label="Play with your group">
+    {% for group in groups %}
+      <a class="group group-{{ group.theme }}" href="{% url 'cybergame:difficulty_select' group.number %}">
+        <span class="group-buddy" aria-hidden="true">{{ group.buddy }}</span>
+        <span class="group-name">{{ group.label }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+{% endif %}
+
 <div class="done-actions">
   <a class="btn btn-next" href="{% url 'cybergame:leaderboard' %}">🏆 Leaderboard</a>
 </div>

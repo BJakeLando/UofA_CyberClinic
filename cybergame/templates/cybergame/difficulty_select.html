@@ -1,13 +1,13 @@
 {% extends "cybergame/base.html" %}
 
-{% block title %}Grade {{ grade.number }} — Pick a level{% endblock %}
+{% block title %}{{ grade.title }} — Pick a level{% endblock %}
 
 {% block content %}
 {% include "cybergame/_chip.html" %}
 
 <header class="home">
   <div class="home-badge" aria-hidden="true">{{ buddy }}</div>
-  <h1 class="home-title home-title-sm">Grade {{ grade.number }}</h1>
+  <h1 class="home-title home-title-sm">{{ grade.title }}</h1>
   <p class="home-sub">Pick a level</p>
 </header>
 

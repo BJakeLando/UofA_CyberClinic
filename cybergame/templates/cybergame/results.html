@@ -1,6 +1,6 @@
 {% extends "cybergame/base.html" %}
 
-{% block title %}Grade {{ grade.number }} — Stars{% endblock %}
+{% block title %}{{ grade.title }} — Stars{% endblock %}
 
 {% block content %}
 {% include "cybergame/_chip.html" %}
@@ -50,7 +50,11 @@
     <button type="button" class="say-btn" data-scope="#done" aria-label="Read out loud">🔊</button>
     <a class="btn btn-go" href="{% url 'cybergame:leaderboard' %}">🏆 Leaderboard</a>
   </div>
-  <a class="btn-back" href="{% url 'cybergame:difficulty_select' grade.number %}">Try another level</a>
+  {% if grade.skips_level_pick %}
+    <a class="btn-back" href="{% url 'cybergame:grade_select' %}">Change group</a>
+  {% else %}
+    <a class="btn-back" href="{% url 'cybergame:difficulty_select' grade.number %}">Try another level</a>
+  {% endif %}
 </section>
 
 <script>

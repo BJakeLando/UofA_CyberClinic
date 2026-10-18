@@ -1,9 +1,9 @@
 {% extends "cybergame/base.html" %}
 
-{% block title %}Grade {{ grade.number }} — Round {{ number_shown }}{% endblock %}
+{% block title %}{{ grade.title }} — Round {{ number_shown }}{% endblock %}
 
 {% block content %}
-<div class="play">
+<div class="play{% if grade.theme %} theme-{{ grade.theme }}{% endif %}">
 
   <div class="topbar">
     <ol class="dots" aria-label="Round {{ number_shown }} of {{ total }}">
@@ -75,7 +75,7 @@
             {% endcomment %}
             <div class="game-world">
               <div class="game-sprites" aria-hidden="true">
-                <span class="sprite s1">🧍</span><span class="sprite s3">☁️</span><span class="sprite s2">🌳</span>
+                <span class="sprite s1">{{ sprites.0 }}</span><span class="sprite s3">{{ sprites.2 }}</span><span class="sprite s2">{{ sprites.1 }}</span>
               </div>
 
             <div class="ad" role="group" aria-label="A pop-up appeared">

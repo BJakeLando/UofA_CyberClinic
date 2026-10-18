@@ -8,6 +8,19 @@ from .models import Classroom, Completion, Grade, Player, Track
 # One friendly animal per grade, shown on the grade buttons
 GRADE_BUDDIES = {3: "🐢", 4: "🦊", 5: "🦉", 6: "🦁"}
 
+# Groups get a picture by theme instead (Grade.theme)
+GROUP_BUDDIES = {"girl-scouts": "🏕️"}
+
+# What stands around in the game world behind a device pop-up: s1, s2, s3
+SPRITES = ("🧍", "🌳", "☁️")
+GROUP_SPRITES = {"girl-scouts": ("🧍", "⛺", "🌲")}
+
+
+def buddy_for(grade):
+    if grade.is_group:
+        return GROUP_BUDDIES.get(grade.theme, "⭐")
+    return GRADE_BUDDIES.get(grade.number, "⭐")
+
 TRACK_ORDER = ["beginner", "intermediate", "advanced"]
 
 TRACK_LOOK = {
@@ -297,11 +310,13 @@ def grade_select(request):
     if player is None:
         return _needs_player(request)
 
-    grades = list(Grade.objects.all())
-    for g in grades:
-        g.buddy = GRADE_BUDDIES.get(g.number, "⭐")
+    everything = list(Grade.objects.all())
+    for g in everything:
+        g.buddy = buddy_for(g)
     return render(request, "cybergame/grade_select.html",
-                  {"grades": grades, **_player_context(player)})
+                  {"grades": [g for g in everything if not g.is_group],
+                   "groups": [g for g in everything if g.is_group],
+                   **_player_context(player)})
 
 
 def difficulty_select(request, number):
@@ -311,6 +326,10 @@ def difficulty_select(request, number):
 
     grade = get_object_or_404(Grade, number=number)
     have = {t.difficulty: t for t in grade.tracks.all()}
+
+    if grade.skips_level_pick:
+        only = next(iter(have))
+        return redirect("cybergame:start_track", number=number, difficulty=only)
 
     tracks = []
     for slug in TRACK_ORDER:
@@ -333,7 +352,7 @@ def difficulty_select(request, number):
         })
 
     return render(request, "cybergame/difficulty_select.html",
-                  {"grade": grade, "buddy": GRADE_BUDDIES.get(number, "⭐"),
+                  {"grade": grade, "buddy": buddy_for(grade),
                    "tracks": tracks, **_player_context(player)})
 
 
@@ -352,7 +371,7 @@ def start_track(request, number, difficulty):
     scens = _scenarios(track)
     return render(request, "cybergame/start.html",
                   {"grade": grade, "track": track,
-                   "buddy": GRADE_BUDDIES.get(number, "⭐"),
+                   "buddy": buddy_for(grade),
                    "total": len(scens),
                    "earned": _track_points(player, track),
                    "possible": sum(_best_points(s) for s in scens),
@@ -430,6 +449,7 @@ def question(request, number, difficulty, index):
                    "chosen": chosen, "best_choice": best_choice, "tier": tier,
                    "result_emoji": result_emoji, "result_head": result_head,
                    "gained": gained, "dots": dots,
+                   "sprites": GROUP_SPRITES.get(grade.theme, SPRITES),
                    "number_shown": index + 1, "total": len(scenarios),
                    "next_index": index + 1,
                    "is_last": index + 1 >= len(scenarios),

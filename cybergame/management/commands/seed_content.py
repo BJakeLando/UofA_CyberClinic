@@ -19,7 +19,7 @@ Scene kinds:
   voice  - a voice message                (needs sender + sender_emoji)
   ask    - a plain question               (needs art)
 
-Points: 2 = best (say no AND tell a teacher or family member)
+Points: 2 = best (tell a teacher or family member)
         1 = safe but not the best
         0 = not safe (feedback is kind, never scary)
 
@@ -37,6 +37,19 @@ def S(kind, prompt, choices, stage="decide", sender="", sender_emoji="", art="",
         "kind": kind, "prompt": prompt, "choices": choices, "stage": stage,
         "sender": sender, "sender_emoji": sender_emoji, "art": art, "question": question,
     }
+
+
+def MEET(*choices):
+    """Answers for a stranger asking to meet up in real life.
+
+    Two answers on purpose, not three. The best move is to not reply at all
+    and tell a teacher or family member. "Say no" used to be the 1-point
+    answer and "say no and tell" the 2-point one, but saying no is still a
+    reply, and any reply keeps the conversation going. Wagner flagged this:
+    they shouldn't engage. There is no safe in-between answer here that
+    doesn't involve talking back, so there is no 1-point option.
+    """
+    return list(choices)
 
 
 CONTENT = [
@@ -59,11 +72,10 @@ CONTENT = [
                 ("📛", "Tell my name", 0, "Keep your real name private in games."),
                 ("🤐", "Don't answer", 1, "Good! Telling a teacher or family member is even better."),
             ]),
-            S("chat", "Want to meet me at the park?", sender="BlockBuddy", sender_emoji="🧸", choices=[
-                ("👋", "Say no", 1, "Good! Now tell a teacher or family member too."),
-                ("🙋", "Say no and tell", 2, "Yes! Never meet game friends."),
+            S("chat", "Want to meet me at the park?", sender="BlockBuddy", sender_emoji="🧸", choices=MEET(
+                ("🙋", "Tell family or teacher", 2, "Yes! Don't answer them. Just tell."),
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
-            ]),
+            )),
             S("popup", "Your tablet is broken! Tap to fix!", art="⚠️", stage="recognize", choices=[
                 ("🔧", "Tap to fix", 0, "This is a trick. Your tablet is fine."),
                 ("❌", "Close it", 1, "Good! Tell a teacher or family member too."),
@@ -106,11 +118,10 @@ CONTENT = [
                 ("✍️", "Fill it in", 0, "Keep your birthday and address private."),
                 ("❌", "Close it", 1, "Good! Tell a teacher or family member too."),
             ]),
-            S("chat", "Let's meet at the store after school!", sender="PixelPal", sender_emoji="🐱", choices=[
+            S("chat", "Let's meet at the store after school!", sender="PixelPal", sender_emoji="🐱", choices=MEET(
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
-                ("👋", "Say no", 1, "Good! Now tell a teacher or family member too."),
-                ("🙋", "Say no and tell", 2, "Perfect! That is the best move."),
-            ]),
+                ("🙋", "Tell family or teacher", 2, "Perfect! No reply needed. Just tell."),
+            )),
             S("ask", "You typed your password on a weird website.", art="😬", stage="recovery", choices=[
                 ("🙋", "Tell family or teacher", 2, "Yes! The sooner the better."),
                 ("🤫", "Do nothing", 0, "It's OK! Tell someone so it gets fixed."),
@@ -196,11 +207,10 @@ CONTENT = [
                 ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
                 ("⏳", "Wait and see", 1, "Good to wait. Checking is even better."),
             ]),
-            S("chat", "Let's meet in real life this weekend!", sender="PixelPal", sender_emoji="🐱", choices=[
+            S("chat", "Let's meet in real life this weekend!", sender="PixelPal", sender_emoji="🐱", choices=MEET(
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
-                ("🙋", "Say no and tell", 2, "Perfect! That is the best move."),
-                ("👋", "Say no", 1, "Good! Now tell a teacher or family member too."),
-            ]),
+                ("🙋", "Tell family or teacher", 2, "Perfect! Don't reply. Tell someone you trust."),
+            )),
             S("ask", "You already gave someone your password.", art="🔑", stage="recovery", choices=[
                 ("🤞", "Hope it's fine", 0, "It's fixable! Tell someone so it gets fixed."),
                 ("🔄", "Change it myself", 1, "Good start! A teacher or family member can check more."),
@@ -398,6 +408,62 @@ DEVICE_CONTENT = {
     ],
 }
 
+# ---------------------------------------------------------------------------
+# Groups - played instead of a grade.
+#
+# Girl Scouts is 6th grade Advanced with a scout theme: the same six scenes
+# in the same order, the same trick in each one, the same hotspots and the
+# same points. Only the wording is themed (badges, troop friends, cookie
+# orders, getting picked up after a meeting). If a 6th grade Advanced scene
+# changes, change its twin here too.
+#
+# No logos, cookie names or official program names: badges, troops and
+# cookie sales are generic enough to say plainly, the rest stays out.
+# ---------------------------------------------------------------------------
+
+TEXT_PARENT_SCOUTS = T(
+    "+1 520-555-0163",
+    "Hey this is Dad 😊 I got a new phone. Troop meeting is over, can you "
+    "come outside and meet me?",
+    ("💬", "OK, coming!",
+     "Anyone can type that they are your dad. That number is not his."),
+    DELETE_IT,
+    ("📞", "Call DADDY",
+     "You called the number already saved for your dad, and asked your family "
+     "code word if you have one. That is exactly right."),
+    hint="Your dad's real number is saved under DADDY. This text came from a "
+         "random number.",
+)
+
+SCOUTS_DEVICE = [
+    D("Pixel Park", "SEND A PHOTO OF YOURSELF TO EARN A SECRET BADGE", "📸",
+      ("📸", "Send a photo", "No real troop or game ever needs a picture of you. Never send one."),
+      CLOSE, REPORT),
+    D("Pixel Park", "THIS IS YOUR TROOP LEADER. VERIFY YOUR PASSWORD.", "🛡️",
+      ("🛡️", "Verify password", "Looking official is the whole trick. Real leaders never ask."),
+      CLOSE, REPORT),
+    D("Pixel Park", "YOUR TROOP FRIEND SENT YOU 5,000 COINS! TAP TO ACCEPT", "🎁",
+      ("🎁", "Accept the gift", "Check with your friend at your next meeting. Accounts get stolen."),
+      CLOSE, REPORT),
+    D("Pixel Park", "ENTER THE CODE FROM YOUR PHONE TO SAVE YOUR COOKIE ORDERS", "🍪",
+      ("🔢", "Enter the code", "That code is the lock on your account. It stays with you."),
+      CLOSE, REPORT),
+    D("Pixel Park", "GET EVERY BADGE NOW - TAP TO INSTALL", "🎖️",
+      ("⬇️", "Install it", "Badges are earned. Cheat downloads are how devices get hacked."),
+      CLOSE, REPORT),
+    TEXT_PARENT_SCOUTS,  # last, same as 6th grade
+]
+
+# Group numbers start at 100 so they never collide with a grade (see Grade).
+GROUPS = [
+    {
+        "number": 100, "label": "Girl Scouts",
+        "intro": "No hints here. Tap the screen like it's real.",
+        "tracks": {"advanced": SCOUTS_DEVICE},
+    },
+]
+
+
 TRACKS = [
     ("beginner",     "🌱", "Words and pictures, with hints", True),
     ("intermediate", "⚡", "Real screens, hints still on",    True),
@@ -418,80 +484,97 @@ class Command(BaseCommand):
             self.stdout.write("Cleared existing content.")
 
         for g_index, g in enumerate(CONTENT):
-            grade, _ = Grade.objects.update_or_create(
-                number=g["number"],
-                defaults={"label": g["label"], "intro": g["intro"], "order": g_index},
-            )
-
-            tracks = {}
-            for t_index, (slug, emoji, blurb, hints) in enumerate(TRACKS):
-                track, _ = Track.objects.update_or_create(
-                    grade=grade,
-                    difficulty=slug,
-                    defaults={
-                        "emoji": emoji, "blurb": blurb,
-                        "order": t_index, "show_hints": hints,
-                    },
-                )
-                tracks[slug] = track
-
-            # anything left over from before tracks existed
-            grade.scenarios.filter(track__isnull=True).delete()
-
             device = DEVICE_CONTENT.get(g["number"], [])
-            plan = [
-                (tracks["beginner"], g["scenarios"]),
-                (tracks["intermediate"], device),
-                (tracks["advanced"], device),
-            ]
-
-            made = 0
-            for track, scenarios in plan:
-                for s_index, s in enumerate(scenarios):
-                    # update in place, keyed on (track, order).
-                    #
-                    # This MUST NOT delete and recreate. Completion rows
-                    # cascade from Scenario, so wiping scenarios on every
-                    # deploy would erase every player's history and let
-                    # them re-earn points they already had.
-                    scenario, _ = Scenario.objects.update_or_create(
-                        track=track,
-                        order=s_index,
-                        defaults={
-                            "grade": grade,
-                            "stage": s["stage"],
-                            "kind": s["kind"],
-                            "prompt": s["prompt"],
-                            "sender": s["sender"],
-                            "sender_emoji": s["sender_emoji"],
-                            "art": s["art"],
-                            "question": s["question"],
-                            "hint": s.get("hint", ""),
-                            "active": True,
-                        },
-                    )
-                    for c_index, choice in enumerate(s["choices"]):
-                        emoji, text, points, feedback = choice[:4]
-                        hotspot = choice[4] if len(choice) > 4 else ""
-                        Choice.objects.update_or_create(
-                            scenario=scenario,
-                            order=c_index,
-                            defaults={
-                                "emoji": emoji,
-                                "text": text,
-                                "points": points,
-                                "feedback": feedback,
-                                "hotspot": hotspot,
-                            },
-                        )
-                    # drop answers that no longer exist in the content file
-                    scenario.choices.filter(order__gte=len(s["choices"])).delete()
-                    made += 1
-
-                # drop scenes removed from the end of a track
-                track.scenarios.filter(order__gte=len(scenarios)).delete()
-
+            made = self.load(g, Grade.Kind.GRADE, g_index, {
+                "beginner": g["scenarios"],
+                "intermediate": device,
+                "advanced": device,
+            })
             self.stdout.write(
-                f"{grade.label}: {len(g['scenarios'])} beginner, "
+                f"{g['label']}: {len(g['scenarios'])} beginner, "
                 f"{len(device)} device x2 ({made} scenes total)"
             )
+
+        for g_index, g in enumerate(GROUPS, start=len(CONTENT)):
+            made = self.load(g, Grade.Kind.GROUP, g_index, g["tracks"])
+            levels = ", ".join(g["tracks"])
+            self.stdout.write(f"{g['label']}: {levels} ({made} scenes total)")
+
+    def load(self, g, kind, g_index, content):
+        """Create or update one grade or group and every scene under it.
+
+        `content` maps a difficulty slug to its scene list. A grade has all
+        three; a group only has the levels listed for it.
+        """
+        grade, _ = Grade.objects.update_or_create(
+            number=g["number"],
+            defaults={"label": g["label"], "intro": g["intro"],
+                      "order": g_index, "kind": kind},
+        )
+
+        tracks = {}
+        for t_index, (slug, emoji, blurb, hints) in enumerate(TRACKS):
+            if slug not in content:
+                continue
+            track, _ = Track.objects.update_or_create(
+                grade=grade,
+                difficulty=slug,
+                defaults={
+                    "emoji": emoji, "blurb": blurb,
+                    "order": t_index, "show_hints": hints,
+                },
+            )
+            tracks[slug] = track
+
+        # anything left over from before tracks existed
+        grade.scenarios.filter(track__isnull=True).delete()
+
+        plan = [(tracks[slug], content[slug]) for slug in tracks]
+
+        made = 0
+        for track, scenarios in plan:
+            for s_index, s in enumerate(scenarios):
+                # update in place, keyed on (track, order).
+                #
+                # This MUST NOT delete and recreate. Completion rows
+                # cascade from Scenario, so wiping scenarios on every
+                # deploy would erase every player's history and let
+                # them re-earn points they already had.
+                scenario, _ = Scenario.objects.update_or_create(
+                    track=track,
+                    order=s_index,
+                    defaults={
+                        "grade": grade,
+                        "stage": s["stage"],
+                        "kind": s["kind"],
+                        "prompt": s["prompt"],
+                        "sender": s["sender"],
+                        "sender_emoji": s["sender_emoji"],
+                        "art": s["art"],
+                        "question": s["question"],
+                        "hint": s.get("hint", ""),
+                        "active": True,
+                    },
+                )
+                for c_index, choice in enumerate(s["choices"]):
+                    emoji, text, points, feedback = choice[:4]
+                    hotspot = choice[4] if len(choice) > 4 else ""
+                    Choice.objects.update_or_create(
+                        scenario=scenario,
+                        order=c_index,
+                        defaults={
+                            "emoji": emoji,
+                            "text": text,
+                            "points": points,
+                            "feedback": feedback,
+                            "hotspot": hotspot,
+                        },
+                    )
+                # drop answers that no longer exist in the content file
+                scenario.choices.filter(order__gte=len(s["choices"])).delete()
+                made += 1
+
+            # drop scenes removed from the end of a track
+            track.scenarios.filter(order__gte=len(scenarios)).delete()
+
+        return made

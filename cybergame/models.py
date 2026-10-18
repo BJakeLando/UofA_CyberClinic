@@ -1,17 +1,53 @@
 from django.db import models
+from django.utils.text import slugify
 
 
 class Grade(models.Model):
-    number = models.PositiveSmallIntegerField(unique=True)   # 3, 4, 5, 6
-    label = models.CharField(max_length=40)                  # "3rd Grade"
+    """A school grade (3rd-6th), or a group like a Girl Scout troop.
+
+    Groups ride on the same tables and URLs as grades, so they still need a
+    number: every URL is keyed on it. Group numbers start at 100, which keeps
+    them clear of any real grade and sorts them after the grades.
+    """
+
+    class Kind(models.TextChoices):
+        GRADE = "grade", "School grade"
+        GROUP = "group", "Group"
+
+    number = models.PositiveSmallIntegerField(unique=True)   # 3-6, groups 100+
+    label = models.CharField(max_length=40)                  # "3rd Grade", "Girl Scouts"
     intro = models.TextField(blank=True)
     order = models.PositiveSmallIntegerField(default=0)
+    kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.GRADE)
 
     class Meta:
         ordering = ["number"]
 
     def __str__(self):
         return self.label
+
+    @property
+    def is_group(self):
+        return self.kind == self.Kind.GROUP
+
+    @property
+    def title(self):
+        """What a kid sees on screen: "Grade 3", or the group's own name."""
+        return self.label if self.is_group else f"Grade {self.number}"
+
+    @property
+    def theme(self):
+        """Hook for a group's own look, e.g. "girl-scouts". Blank for grades."""
+        return slugify(self.label) if self.is_group else ""
+
+    @property
+    def skips_level_pick(self):
+        """A group with a single level goes straight to it.
+
+        Showing a "pick a level" screen with one real button and two
+        "coming soon" ones is a wasted tap at best.
+        """
+        return self.is_group and self.tracks.count() == 1
 
 
 class Track(models.Model):

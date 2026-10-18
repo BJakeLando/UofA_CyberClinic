@@ -12,6 +12,7 @@
   --grape: #7a5cff;
   --ocean: #2f8fe8;
   --ember: #ff8a3d;
+  --forest: #1f7a4d;   /* groups; white text on it is 5.3:1 */
 
   --line: 4px solid var(--ink);
   --drop: 6px 6px 0 var(--ink);
@@ -100,6 +101,48 @@ body {
 .grade-buddy { font-size: 54px; line-height: 1; }
 .grade-word  { margin-top: 8px; font-size: 20px; font-weight: 600; }
 .grade-num   { font-size: 72px; font-weight: 700; line-height: 0.9; }
+
+/* ---------- groups (played instead of a grade) ---------- */
+
+.groups-label {
+  margin: 30px 0 14px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.groups { display: grid; gap: 20px; }
+
+.group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: var(--line);
+  border-radius: 26px;
+  box-shadow: var(--drop);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.group:hover,
+.group:focus-visible {
+  transform: translate(-2px, -3px);
+  box-shadow: 8px 9px 0 var(--ink);
+}
+
+.group:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 var(--ink); }
+
+.group-buddy { font-size: 48px; line-height: 1; }
+.group-name  { font-size: 36px; font-weight: 700; line-height: 1.05; }
+
+.group-girl-scouts { background: var(--forest); color: var(--cloud); }
+
+/* inside the game: the bar over the tablet picks up the group's colour */
+.theme-girl-scouts .game-bar { background: var(--forest); }
 
 .empty { grid-column: 1 / -1; text-align: center; }
 
