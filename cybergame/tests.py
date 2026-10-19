@@ -30,28 +30,40 @@ class SeededTestCase(TestCase):
         return player
 
 
-class MeetingQuestionTests(SeededTestCase):
-    """A stranger asking to meet: don't reply at all, just tell."""
+class TwoAnswerRuleTests(SeededTestCase):
+    """Wagner: no in-between answers anywhere. Engage, or tell. Nothing says "say no"."""
 
-    def meeting_scenarios(self):
-        return Scenario.objects.filter(choices__text="Go meet them").distinct()
+    def test_every_scene_at_every_level_has_two_answers_engage_or_tell(self):
+        scenes = Scenario.objects.filter(active=True).select_related("grade", "track")
+        self.assertGreater(scenes.count(), 80)
+        for scene in scenes:
+            where = f"{scene.grade.label} {scene.track.difficulty}: {scene.prompt}"
+            self.assertEqual(sorted(c.points for c in scene.choices.all()), [0, 2], where)
 
-    def test_every_grade_with_a_meeting_question_is_covered(self):
-        self.assertEqual(
-            sorted(self.meeting_scenarios().values_list("grade__number", flat=True)),
-            [3, 4, 6, GIRL_SCOUTS],
-        )
+    def test_nothing_says_say_no(self):
+        self.assertFalse(Choice.objects.filter(text__icontains="say no").exists())
 
-    def test_no_answer_involves_saying_anything_back(self):
-        for s in self.meeting_scenarios():
-            for c in s.choices.all():
-                self.assertNotIn("say no", c.text.lower(), s.prompt)
+    def test_tablet_and_text_scenes_have_no_close_or_delete(self):
+        self.assertFalse(Choice.objects.filter(hotspot="close").exists())
+        for scene in Scenario.objects.filter(kind__in=["device", "text"]):
+            hotspots = sorted(c.hotspot for c in scene.choices.all())
+            self.assertEqual(hotspots, ["bait", "verify" if scene.kind == "text" else "report"])
 
-    def test_two_answers_and_telling_is_best(self):
-        for s in self.meeting_scenarios():
-            answers = {c.text: c.points for c in s.choices.all()}
-            self.assertEqual(answers, {"Tell family or teacher": 2, "Go meet them": 0},
-                             s.prompt)
+    def test_tablet_screen_has_no_x_and_a_tell_button(self):
+        self.play_as_new_player()
+        page = self.client.get(reverse("cybergame:question", args=[3, "advanced", 0]))
+        self.assertNotContains(page, 'class="ad-close"')
+        self.assertContains(page, "</span> Tell")
+        self.assertNotContains(page, "Report")
+
+    def test_seed_refuses_a_three_answer_scene(self):
+        from django.core.management.base import CommandError
+        from cybergame.management.commands import seed_content as content
+
+        bad = content.S("chat", "Bad scene", choices=[
+            ("👋", "Say no", 1, "x"), ("🙋", "Tell", 2, "x"), ("🚶", "Go", 0, "x")])
+        with self.assertRaises(CommandError):
+            content.check("test", bad)
 
 
 class GirlScoutsTests(SeededTestCase):
@@ -81,14 +93,6 @@ class GirlScoutsTests(SeededTestCase):
         self.assertEqual(prompts[2], "This is your troop leader, can you tell me your password?")
         self.assertIn("password", fifth.scenarios.get(order=1).prompt)
         self.assertEqual(shape(self.track())[1:], shape(fifth))
-
-    def test_every_scene_has_one_best_answer_and_none_is_a_reply(self):
-        """Wagner: kids shouldn't engage. "Say no" is still a reply."""
-        for scene in self.track().scenarios.all():
-            points = [c.points for c in scene.choices.all()]
-            self.assertEqual(points.count(2), 1, scene.prompt)
-            for c in scene.choices.all():
-                self.assertNotRegex(c.text.lower(), r"\bsay no\b", scene.prompt)
 
     def test_reseed_drops_the_old_tablet_level(self):
         """Girl Scouts shipped as an Advanced tablet level first."""

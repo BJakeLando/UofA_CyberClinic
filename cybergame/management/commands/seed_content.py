@@ -19,14 +19,20 @@ Scene kinds:
   voice  - a voice message                (needs sender + sender_emoji)
   ask    - a plain question               (needs art)
 
-Points: 2 = best (tell a teacher or family member)
-        1 = safe but not the best
-        0 = not safe (feedback is kind, never scary)
+Every scene has exactly TWO answers, at every level:
+  2 = tell a teacher or family member
+  0 = engage - reply, tap, send, go, keep it secret, deal with it alone
+
+There is no in-between answer, on Wagner's instruction. "Say no", "close
+it", "block them", "don't answer" and "report them" all used to be worth 1
+point, but saying no is still replying, and the lesson is that a kid
+should not engage at all: they go and tell. Nothing a kid can pick may say
+"say no". seed_content refuses to load a scene that breaks any of this.
 
 Keep words short. Answer buttons: 4 words or less. Feedback: one short sentence.
 """
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from cybergame.models import Grade, Track, Scenario, Choice
@@ -39,17 +45,7 @@ def S(kind, prompt, choices, stage="decide", sender="", sender_emoji="", art="",
     }
 
 
-def MEET(*choices):
-    """Answers for a stranger asking to meet up in real life.
-
-    Two answers on purpose, not three. The best move is to not reply at all
-    and tell a teacher or family member. "Say no" used to be the 1-point
-    answer and "say no and tell" the 2-point one, but saying no is still a
-    reply, and any reply keeps the conversation going. Wagner flagged this:
-    they shouldn't engage. There is no safe in-between answer here that
-    doesn't involve talking back, so there is no 1-point option.
-    """
-    return list(choices)
+TELL = "Tell family or teacher"
 
 
 CONTENT = [
@@ -59,37 +55,31 @@ CONTENT = [
         "scenarios": [
             S("popup", "You won 1,000 R0bux! Message me on Telegr@m to get your prize!", art="🎁", stage="recognize", choices=[
                 ("💬", "Message them", 0, "Free prizes like this are a trick."),
-                ("🙋", "Tell family or teacher", 2, "Yes! You stayed safe and told someone."),
-                ("❌", "Close it", 1, "Good! Now tell a teacher or family member too."),
+                ("🙋", TELL, 2, "Yes! You stayed safe and told someone."),
             ]),
             S("chat", "What school do you go to?", sender="NewFriend22", sender_emoji="👾", choices=[
-                ("🤐", "Don't answer", 1, "Good! Now tell a teacher or family member too."),
                 ("🏫", "Tell my school", 0, "Your school is private. Keep it secret."),
-                ("🙋", "Tell family or teacher", 2, "Perfect! Teachers and families want to know."),
+                ("🙋", TELL, 2, "Perfect! Teachers and families want to know."),
             ]),
             S("chat", "What is your real name?", sender="PixelPal", sender_emoji="🐱", choices=[
-                ("🙋", "Tell family or teacher", 2, "Great job! That is the best move."),
+                ("🙋", TELL, 2, "Great job! That is the best move."),
                 ("📛", "Tell my name", 0, "Keep your real name private in games."),
-                ("🤐", "Don't answer", 1, "Good! Telling a teacher or family member is even better."),
             ]),
-            S("chat", "Want to meet me at the park?", sender="BlockBuddy", sender_emoji="🧸", choices=MEET(
-                ("🙋", "Tell family or teacher", 2, "Yes! Don't answer them. Just tell."),
+            S("chat", "Want to meet me at the park?", sender="BlockBuddy", sender_emoji="🧸", choices=[
+                ("🙋", TELL, 2, "Yes! Don't answer them. Just tell."),
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
-            )),
+            ]),
             S("popup", "Your tablet is broken! Tap to fix!", art="⚠️", stage="recognize", choices=[
                 ("🔧", "Tap to fix", 0, "This is a trick. Your tablet is fine."),
-                ("❌", "Close it", 1, "Good! Tell a teacher or family member too."),
-                ("🙋", "Tell family or teacher", 2, "Perfect! A teacher or family member can check it."),
+                ("🙋", TELL, 2, "Perfect! A teacher or family member can check it."),
             ]),
             S("ask", "Oops! You tapped something bad. The screen looks weird.", art="😬", stage="recovery", choices=[
-                ("🤫", "Hide it", 0, "Telling makes it easy to fix."),
-                ("🙋", "Tell family or teacher", 2, "Yes! You are NOT in trouble for telling."),
+                ("🙋", TELL, 2, "Yes! You are NOT in trouble for telling."),
                 ("🔧", "Fix it myself", 0, "Don't fix it yourself. Let a teacher or family member help."),
             ]),
             S("chat", "Where do you live?", sender="SunnyDay", sender_emoji="🌻", choices=[
                 ("🙋", "Show my parents", 2, "Yes! A parent or teacher can help."),
                 ("🏠", "Tell them", 0, "Never tell anyone online where you live."),
-                ("🤐", "Ignore them", 1, "Good! Now show a teacher or family member too."),
             ]),
         ],
     },
@@ -99,38 +89,32 @@ CONTENT = [
         "number": 4, "label": "4th Grade", "intro": "",
         "scenarios": [
             S("chat", "Tell me your password. I'll give you a cool hat!", sender="HatTrader", sender_emoji="🎩", choices=[
-                ("✋", "Say no", 1, "Good! Now tell a teacher or family member too."),
                 ("🔑", "Give password", 0, "Never share your password. Not ever."),
-                ("🙋", "Say no and tell", 2, "Perfect! Your password stays yours."),
+                ("🙋", TELL, 2, "Perfect! Your password stays yours."),
             ]),
             S("popup", "Free R0bux! Message me on Telegr@m to get your prize!", art="⭐", stage="recognize", choices=[
-                ("🙋", "Tell family or teacher", 2, "Yes! Free R0bux is always a trick."),
+                ("🙋", TELL, 2, "Yes! Free R0bux is always a trick."),
                 ("💬", "Click Telegr@m link", 0, "This is a trick! Never click prize links."),
-                ("❌", "Close it", 1, "Good! Tell a teacher or family member too."),
             ]),
             S("chat", "Can I log in as you?", sender="Sam (your friend)", sender_emoji="😀", stage="recognize", choices=[
                 ("✅", "Send it", 0, "It might not really be Sam!"),
-                ("🗣️", "Ask Sam at school", 1, "Smart! Tell a teacher or family member if it wasn't Sam."),
-                ("🙋", "Tell family or teacher", 2, "Yes! A teacher or family member can check if it's really Sam."),
+                ("🙋", TELL, 2, "Yes! A teacher or family member can check if it's really Sam."),
             ]),
             S("popup", "What animal are you? Type your name, birthday, and address!", art="🦄", stage="recognize", choices=[
-                ("🙋", "Tell family or teacher", 2, "Great! That quiz wants your secrets."),
+                ("🙋", TELL, 2, "Great! That quiz wants your secrets."),
                 ("✍️", "Fill it in", 0, "Keep your birthday and address private."),
-                ("❌", "Close it", 1, "Good! Tell a teacher or family member too."),
             ]),
-            S("chat", "Let's meet at the store after school!", sender="PixelPal", sender_emoji="🐱", choices=MEET(
+            S("chat", "Let's meet at the store after school!", sender="PixelPal", sender_emoji="🐱", choices=[
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
-                ("🙋", "Tell family or teacher", 2, "Perfect! No reply needed. Just tell."),
-            )),
+                ("🙋", TELL, 2, "Perfect! No reply needed. Just tell."),
+            ]),
             S("ask", "You typed your password on a weird website.", art="😬", stage="recovery", choices=[
-                ("🙋", "Tell family or teacher", 2, "Yes! The sooner the better."),
+                ("🙋", TELL, 2, "Yes! The sooner the better."),
                 ("🤫", "Do nothing", 0, "It's OK! Tell someone so it gets fixed."),
-                ("⏰", "Fix it later", 1, "Better to fix it now with a teacher or family member."),
             ]),
             S("ask", "You tapped something bad a few days ago.", art="⏰", stage="recovery",
               question="Is it too late to tell?", choices=[
                 ("🤐", "Yes, too late", 0, "It's never too late to tell!"),
-                ("⏳", "Wait, it will fix itself", 0, "Don't wait! You are not in trouble, and telling helps get it fixed."),
                 ("🙋", "No, tell today", 2, "Yes! Nobody will be mad at you."),
             ]),
         ],
@@ -141,39 +125,32 @@ CONTENT = [
         "number": 5, "label": "5th Grade", "intro": "",
         "scenarios": [
             S("chat", "Let's talk on a different app. Add me there!", sender="CoolGamer", sender_emoji="🎮", choices=[
-                ("👋", "Say no", 1, "Good! Now tell a teacher or family member too."),
-                ("🙋", "Say no and tell", 2, "Perfect! This one is important to tell."),
+                ("🙋", TELL, 2, "Perfect! This one is important to tell."),
                 ("📱", "Add them", 0, "Other apps are less safe. Stay put."),
             ]),
             S("chat", "I work for the game. Send your password so I can fix your account.", sender="GameHelper", sender_emoji="🛡️", stage="recognize", choices=[
                 ("🔑", "Send it", 0, "Real game helpers never ask for passwords."),
-                ("🙋", "Say no and tell", 2, "Yes! You saw the trick."),
-                ("🚩", "Report them", 1, "Good! Tell a teacher or family member too."),
+                ("🙋", TELL, 2, "Yes! You saw the trick."),
             ]),
             S("chat", "I'll give you a rare pet. Don't tell your parents!", sender="PetTrader", sender_emoji="🐉", choices=[
                 ("🙋", "Tell a parent", 2, "Yes! Secrets from parents are a red flag."),
                 ("🤝", "Take the deal", 0, "\"Don't tell your parents\" means tell them!"),
-                ("✋", "Say no", 1, "Good! Now tell your parents too."),
             ]),
             S("chat", "I'll mail you free headphones! What's your address?", sender="PrizeKing", sender_emoji="🎧", stage="recognize", choices=[
                 ("🏠", "Send my address", 0, "Never share your address online."),
-                ("✋", "Say no", 1, "Good! Tell a teacher or family member too."),
-                ("🙋", "Say no and tell", 2, "Perfect! Your home stays private."),
+                ("🙋", TELL, 2, "Perfect! Your home stays private."),
             ]),
             S("voice", "Hi honey! Leave school and meet me at the corner.", sender="Sounds like Mom", sender_emoji="🎤", stage="recognize", choices=[
-                ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
                 ("🙋", "Ask my teacher", 2, "Yes! Check first. Use your family code word."),
-                ("⏳", "Wait and see", 1, "Good to wait. Asking a teacher is best."),
+                ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
             ]),
             S("ask", "A friend says something bad happened online. \"Don't tell anyone!\"", art="🤝", stage="report", choices=[
                 ("🤐", "Keep the secret", 0, "Good friends get help for friends."),
                 ("💛", "Tell a teacher", 2, "Yes! That's what a real friend does."),
-                ("🤷", "Let them handle it", 0, "Some things are too big for kids alone."),
             ]),
             S("ask", "Something got downloaded on your school Chromebook.", art="💻", stage="recovery", choices=[
-                ("🗑️", "Delete it, say nothing", 0, "Always tell your teacher! They can help fix it."),
                 ("🙋", "Tell my teacher", 2, "Perfect! Telling fast is the best."),
-                ("⏰", "Tell later", 1, "Better to tell right now."),
+                ("🗑️", "Delete it, don't tell", 0, "Always tell your teacher! They can help fix it."),
             ]),
         ],
     },
@@ -184,42 +161,35 @@ CONTENT = [
         "scenarios": [
             S("chat", "Come play in my private Minecr@ft world. Don't tell anyone!", sender="BestBud_Online", sender_emoji="🌟", choices=[
                 ("🎮", "Join their world", 0, "\"Don't tell anyone\" is a trick. Tell a teacher or family member."),
-                ("✋", "Stop talking to them", 1, "Good! Now tell a parent too."),
-                ("🙋", "Stop and tell a parent", 2, "Yes! That takes guts. Great job."),
+                ("🙋", "Tell a parent", 2, "Yes! That takes guts. Great job."),
             ]),
             S("chat", "Send me a picture of you!", sender="NiceGamer", sender_emoji="😊", choices=[
-                ("🙋", "Say no and tell", 2, "Perfect! Always tell a teacher or family member about this."),
+                ("🙋", TELL, 2, "Perfect! Always tell a teacher or family member about this."),
                 ("📸", "Send one", 0, "Once a picture is sent, it's online forever."),
-                ("✋", "Say no", 1, "Good! Now tell a teacher or family member too."),
             ]),
             S("chat", "I'm locked out! Tell me the code that just came to your phone.", sender="Sam (your friend)", sender_emoji="😀", stage="recognize", choices=[
                 ("🔢", "Send the code", 0, "That code guards your account. Never share it."),
-                ("📞", "Call Sam first", 0, "Better to ask a teacher or family member first."),
-                ("🙋", "Say no and tell", 2, "Yes! Sam may have been hacked."),
+                ("🙋", TELL, 2, "Yes! Sam may have been hacked."),
             ]),
             S("chat", "Hey friend, can you do me a small favor?", sender="SuperKind99", sender_emoji="💖", stage="recognize", choices=[
-                ("✋", "Stop answering", 1, "Good! Talk to a parent or teacher."),
                 ("🙋", "Talk to a parent", 2, "Yes! Nice words first, then favors, is a trick."),
                 ("👍", "Do the favor", 0, "That's a trick. Talk to a parent or teacher."),
             ]),
             S("voice", "It's Dad. Leave the house and meet me down the street.", sender="Sounds like Dad", sender_emoji="🎤", stage="recognize", choices=[
                 ("🙋", "Call Dad's real phone", 2, "Yes! Check first. Use your family code word."),
                 ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
-                ("⏳", "Wait and see", 1, "Good to wait. Checking is even better."),
             ]),
-            S("chat", "Let's meet in real life this weekend!", sender="PixelPal", sender_emoji="🐱", choices=MEET(
+            S("chat", "Let's meet in real life this weekend!", sender="PixelPal", sender_emoji="🐱", choices=[
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
-                ("🙋", "Tell family or teacher", 2, "Perfect! Don't reply. Tell someone you trust."),
-            )),
+                ("🙋", TELL, 2, "Perfect! Don't reply. Tell someone you trust."),
+            ]),
             S("ask", "You already gave someone your password.", art="🔑", stage="recovery", choices=[
                 ("🤞", "Hope it's fine", 0, "It's fixable! Tell someone so it gets fixed."),
-                ("🔄", "Change it myself", 1, "Good start! A teacher or family member can check more."),
-                ("🙋", "Tell family or teacher", 2, "Yes! You are NOT in trouble for telling."),
+                ("🙋", TELL, 2, "Yes! You are NOT in trouble for telling."),
             ]),
             S("ask", "Something bad happened online a while ago. You're embarrassed to tell.", art="💭", stage="recovery", choices=[
-                ("🙋", "Tell family or teacher", 2, "Yes! It's never too late to tell."),
+                ("🙋", TELL, 2, "Yes! It's never too late to tell."),
                 ("🤐", "Let it go", 0, "It's OK! Teachers and families understand. They've been there too."),
-                ("🗣️", "Tell a friend", 1, "A start! A teacher or family member can help more."),
             ]),
         ],
     },
@@ -234,67 +204,55 @@ CONTENT = [
 # Track.show_hints: Intermediate still shows the question line and the worded
 # answer buttons underneath, Advanced shows the screen and nothing else.
 #
-# Every scene needs exactly three answers, one per hotspot:
+# Two answers, one per hotspot:
 #   bait   - the tempting button inside the pop-up   (0 points)
-#   close  - the little X in the corner              (1 point)
-#   report - the report flag in the game bar         (2 points)
+#   report - the Tell button in the game bar         (2 points)
+#
+# The hotspot is still called "report" in the database, but the button says
+# Tell: reporting and closing the pop-up were dropped as in-between answers.
+# With no close hotspot the pop-up draws without its little X.
 # ---------------------------------------------------------------------------
 
-def D(app, prompt, art, bait, close, report, stage="recognize"):
-    """One tablet scene. bait/close/report are (emoji, text, feedback)."""
+def D(app, prompt, art, bait, stage="recognize"):
+    """One tablet scene. bait is (emoji, text, feedback)."""
     return {
         "kind": "device", "prompt": prompt, "art": art, "sender": app,
         "sender_emoji": "", "stage": stage, "question": "What do you do?",
         "choices": [
             (bait[0], bait[1], 0, bait[2], "bait"),
-            (close[0], close[1], 1, close[2], "close"),
-            (report[0], report[1], 2, report[2], "report"),
+            ("🙋", TELL, 2, "Yes! Don't tap anything. Tell a teacher or family member.", "report"),
         ],
     }
-
-
-CLOSE = ("❌", "Close it", "Closing it is safe. Reporting it is even better.")
-REPORT = ("🚩", "Report and tell", "You reported it. Now tell a teacher or family member.")
 
 
 # ---------------------------------------------------------------------------
 # Text-message scenes (kind="text")
 #
 # A phone showing one text from a number that is NOT in contacts, claiming to
-# be somebody the kid knows. The lesson is not "spot the scary message" - the
-# message looks completely ordinary on purpose. The tell is structural and
-# visible on screen: an unknown number at the top, and the real saved contact
-# sitting right underneath it.
+# be somebody the kid knows. The message looks completely ordinary on purpose.
+# The tell is structural and visible on screen: an unknown number at the top,
+# and a saved family contact sitting right underneath it.
 #
-# The safe answer here is NOT close-or-report. You cannot report your way out
-# of an impersonation; you check through a channel you already trust. That is
-# why these use a `verify` hotspot instead of `report`.
-#
-# Three answers, one per hotspot:
-#   bait    - the friendly quick reply                 (0 points)
-#   close   - delete the message                       (1 point)
-#   verify  - call the number already saved in contacts (2 points)
+# Two answers, one per hotspot:
+#   bait    - the friendly quick reply                        (0 points)
+#   verify  - call a family member already saved in contacts  (2 points)
 #
 # `hint` shows on Intermediate only (Track.show_hints). Advanced gets the
 # identical screen with no hint and no answer list.
 # ---------------------------------------------------------------------------
 
-def T(number, prompt, bait, close, verify, hint, stage="decide"):
-    """One text-message scene. bait/close/verify are (emoji, text, feedback)."""
+def T(number, prompt, bait, verify, hint, stage="decide"):
+    """One text-message scene. bait/verify are (emoji, text, feedback)."""
     return {
         "kind": "text", "prompt": prompt, "art": "", "sender": number,
         "sender_emoji": "", "stage": stage, "question": "What do you do?",
         "hint": hint,
         "choices": [
             (bait[0], bait[1], 0, bait[2], "bait"),
-            (close[0], close[1], 1, close[2], "close"),
             (verify[0], verify[1], 2, verify[2], "verify"),
         ],
     }
 
-
-DELETE_IT = ("🗑️", "Delete",
-             "Deleting it is safe. Telling a teacher or family member is better.")
 
 # 3rd and 4th: someone claiming to be a classmate, after a password.
 TEXT_CLASSMATE = T(
@@ -303,12 +261,10 @@ TEXT_CLASSMATE = T(
     "password so i can send u stuff",
     ("💬", "Send it",
      "Never send a password, not even to a friend. Real friends do not ask."),
-    DELETE_IT,
-    ("📞", "Call JAYDEN",
-     "You called the number already saved in the phone. That is how you find "
-     "out if it is really them."),
-    hint="Jayden's real number is saved under JAYDEN. This text came from a "
-         "random number.",
+    ("📞", "Call MOM",
+     "Yes! Don't reply. Your mom can help check if it is really Jayden."),
+    hint="This text came from a random number, not a number saved in your "
+         "phone.",
 )
 
 # 5th and 6th: someone claiming to be a parent, trying to get them to walk out.
@@ -317,7 +273,6 @@ TEXT_PARENT = T(
     "Hey this is Dad 😊 I got a new phone. Can you come outside and meet me?",
     ("💬", "OK, coming!",
      "Anyone can type that they are your dad. That number is not his."),
-    DELETE_IT,
     ("📞", "Call DADDY",
      "You called the number already saved for your dad, and asked your family "
      "code word if you have one. That is exactly right."),
@@ -328,85 +283,59 @@ TEXT_PARENT = T(
 DEVICE_CONTENT = {
     3: [
         D("Pixel Park", "CLICK HERE FOR FREE GOLD!", "🪙",
-          ("🪙", "Tap to get gold", "Free gold pop-ups are a trick to take your stuff."),
-          CLOSE, REPORT),
+          ("🪙", "Tap to get gold", "Free gold pop-ups are a trick to take your stuff.")),
         D("Pixel Park", "YOU WON A FREE PET! TAP NOW!", "🐶",
-          ("🐶", "Tap to get pet", "Real games do not give pets away in a pop-up."),
-          CLOSE, REPORT),
+          ("🐶", "Tap to get pet", "Real games do not give pets away in a pop-up.")),
         D("Pixel Park", "YOUR GAME WILL DELETE IN 60 SECONDS!", "⏳",
-          ("⏳", "Tap to save game", "Scary countdowns are there to make you hurry. Slow down."),
-          CLOSE, REPORT),
+          ("⏳", "Tap to save game", "Scary countdowns are there to make you hurry. Slow down.")),
         D("Pixel Park", "TAP TO GET 10,000 FREE COINS!", "💰",
-          ("💰", "Tap for coins", "If it sounds too good to be true, it is."),
-          CLOSE, REPORT),
+          ("💰", "Tap for coins", "If it sounds too good to be true, it is.")),
         D("Pixel Park", "YOU ARE PLAYER NUMBER 1,000,000! CLAIM PRIZE!", "🎉",
-          ("🎉", "Claim my prize", "Everybody sees this same message. Nobody wins."),
-          CLOSE, REPORT),
+          ("🎉", "Claim my prize", "Everybody sees this same message. Nobody wins.")),
         TEXT_CLASSMATE,  # always last: appending never
         # shifts the order of scenes kids already played
-
     ],
     4: [
         D("Pixel Park", "FREE R0BUX! TAP HERE NOW!", "⭐",
-          ("⭐", "Tap for R0bux", "Look at the spelling. Real names are not written that way."),
-          CLOSE, REPORT),
+          ("⭐", "Tap for R0bux", "Look at the spelling. Real names are not written that way.")),
         D("Pixel Park", "ACCOUNT LOCKED! TYPE YOUR PASSWORD TO UNLOCK", "🔒",
-          ("🔑", "Type my password", "A real game never asks for your password in a pop-up."),
-          CLOSE, REPORT),
+          ("🔑", "Type my password", "A real game never asks for your password in a pop-up.")),
         D("Pixel Park", "CLICK HERE FOR FREE GOLD!", "🪙",
-          ("🪙", "Tap to get gold", "Free gold pop-ups are a trick to take your stuff."),
-          CLOSE, REPORT),
+          ("🪙", "Tap to get gold", "Free gold pop-ups are a trick to take your stuff.")),
         D("Pixel Park", "CHAT WITH US ON TELEGR@M TO GET YOUR PRIZE", "💬",
-          ("💬", "Go to the chat app", "Moving you to another app gets you away from help."),
-          CLOSE, REPORT),
+          ("💬", "Go to the chat app", "Moving you to another app gets you away from help.")),
         D("Pixel Park", "SPIN THE WHEEL! YOU CANNOT LOSE!", "🎡",
-          ("🎡", "Spin the wheel", "\"You cannot lose\" always means somebody else wins."),
-          CLOSE, REPORT),
-        TEXT_CLASSMATE,  # always last: appending never
-        # shifts the order of scenes kids already played
-
+          ("🎡", "Spin the wheel", "\"You cannot lose\" always means somebody else wins.")),
+        TEXT_CLASSMATE,
     ],
     5: [
         D("Pixel Park", "FREE RARE SKIN! JUST ENTER YOUR PASSWORD", "🎽",
-          ("🔑", "Enter my password", "Your password is never the price of a free thing."),
-          CLOSE, REPORT),
+          ("🔑", "Enter my password", "Your password is never the price of a free thing.")),
         D("Pixel Park", "CLAIM YOUR PRIZE ON THIS OTHER APP", "📱",
-          ("📱", "Open the other app", "Off the game means away from anyone who can help you."),
-          CLOSE, REPORT),
+          ("📱", "Open the other app", "Off the game means away from anyone who can help you.")),
         D("Pixel Park", "ASK A PARENT FOR THEIR CARD TO KEEP PLAYING", "💳",
-          ("💳", "Go get the card", "Nobody should ask a kid to fetch a payment card."),
-          CLOSE, REPORT),
+          ("💳", "Go get the card", "Nobody should ask a kid to fetch a payment card.")),
         D("Pixel Park", "SEE WHO LOOKED AT YOUR PROFILE! TAP!", "👀",
-          ("👀", "Tap to see", "This one runs on curiosity. That is the trick."),
-          CLOSE, REPORT),
+          ("👀", "Tap to see", "This one runs on curiosity. That is the trick.")),
         D("Pixel Park", "MINECR@FT MODS - FREE DOWNLOAD - TAP", "⬇️",
-          ("⬇️", "Download it", "Downloads from a pop-up can break the whole device."),
-          CLOSE, REPORT),
-        TEXT_PARENT,  # always last: appending never
-        # shifts the order of scenes kids already played
-
+          ("⬇️", "Download it", "Downloads from a pop-up can break the whole device.")),
+        TEXT_PARENT,
     ],
     6: [
         D("Pixel Park", "SEND A PHOTO OF YOURSELF TO UNLOCK THIS LEVEL", "📸",
-          ("📸", "Send a photo", "No real game ever needs a picture of you. Never send one."),
-          CLOSE, REPORT),
+          ("📸", "Send a photo", "No real game ever needs a picture of you. Never send one.")),
         D("Pixel Park", "WE ARE THE GAME TEAM. VERIFY YOUR PASSWORD.", "🛡️",
-          ("🛡️", "Verify password", "Looking official is the whole trick. Staff never ask."),
-          CLOSE, REPORT),
+          ("🛡️", "Verify password", "Looking official is the whole trick. Staff never ask.")),
         D("Pixel Park", "YOUR FRIEND SENT YOU 5,000 COINS! TAP TO ACCEPT", "🎁",
-          ("🎁", "Accept the gift", "Check with your friend in person. Accounts get stolen."),
-          CLOSE, REPORT),
+          ("🎁", "Accept the gift", "Accounts get stolen. A teacher or family member can help check.")),
         D("Pixel Park", "ENTER THE CODE FROM YOUR PHONE TO CONTINUE", "🔢",
-          ("🔢", "Enter the code", "That code is the lock on your account. It stays with you."),
-          CLOSE, REPORT),
+          ("🔢", "Enter the code", "That code is the lock on your account. It stays with you.")),
         D("Pixel Park", "UNLIMITED MONEY MOD - TAP TO INSTALL", "⬇️",
-          ("⬇️", "Install the mod", "Cheat downloads are one of the easiest ways to get hacked."),
-          CLOSE, REPORT),
-        TEXT_PARENT,  # always last: appending never
-        # shifts the order of scenes kids already played
-
+          ("⬇️", "Install the mod", "Cheat downloads are one of the easiest ways to get hacked.")),
+        TEXT_PARENT,
     ],
 }
+
 
 # ---------------------------------------------------------------------------
 # Groups - played instead of a grade.
@@ -417,54 +346,42 @@ DEVICE_CONTENT = {
 # chats, badges and cookie sales. The fake troop leader sits where 5th
 # grade's fake game helper is.
 #
-# Unlike the grades, no best answer here involves replying. "Say no" is a
-# reply, and Wagner's rule is that kids shouldn't engage at all; a group is
-# exactly where he is putting this in front of kids. Where 5th grade has
-# "Say no" for 1 point, this has a non-reply (block, don't answer) instead.
-#
 # No logos, cookie names or official program names: badges, troops and
 # cookie sales are generic enough to say plainly, the rest stays out.
 # ---------------------------------------------------------------------------
 
 SCOUTS = [
-    S("chat", "Let's go hiking! Can you meet me somewhere in person?", sender="TrailBuddy", sender_emoji="🥾", choices=MEET(
+    S("chat", "Let's go hiking! Can you meet me somewhere in person?", sender="TrailBuddy", sender_emoji="🥾", choices=[
         ("🚶", "Go meet them", 0, "Never go meet someone you only know online."),
-        ("🙋", "Tell family or teacher", 2, "Perfect! Don't reply. Tell someone you trust."),
-    )),
+        ("🙋", TELL, 2, "Perfect! Don't reply. Tell someone you trust."),
+    ]),
     S("chat", "Let's talk on a different app. Add me there!", sender="CampPal", sender_emoji="🎒", choices=[
-        ("🚫", "Block them", 1, "Good! Now tell a teacher or family member too."),
-        ("🙋", "Tell family or teacher", 2, "Perfect! This one is important to tell."),
+        ("🙋", TELL, 2, "Perfect! This one is important to tell."),
         ("📱", "Add them", 0, "Other apps are less safe. Stay put."),
     ]),
     S("chat", "This is your troop leader, can you tell me your password?", sender="TroopLeader", sender_emoji="🧭", stage="recognize", choices=[
         ("🔑", "Send my password", 0, "Real troop leaders never ask for your password."),
-        ("🙋", "Tell family or teacher", 2, "Yes! You saw the trick."),
-        ("🚩", "Report them", 1, "Good! Tell a teacher or family member too."),
+        ("🙋", TELL, 2, "Yes! You saw the trick."),
     ]),
     S("chat", "I'll give you a secret badge. Don't tell your parents!", sender="BadgeTrader", sender_emoji="🎖️", choices=[
         ("🙋", "Tell a parent", 2, "Yes! Secrets from parents are a red flag."),
         ("🤝", "Take the deal", 0, "\"Don't tell your parents\" means tell them!"),
-        ("🤐", "Don't answer", 1, "Good! Now tell your parents too."),
     ]),
     S("chat", "I want to buy 10 boxes of cookies! What's your home address?", sender="CookieFan", sender_emoji="🍪", stage="recognize", choices=[
         ("🏠", "Send my address", 0, "Never share your address online."),
-        ("🤐", "Don't answer", 1, "Good! Tell a teacher or family member too."),
-        ("🙋", "Tell family or teacher", 2, "Perfect! Your family can handle cookie orders."),
+        ("🙋", TELL, 2, "Perfect! Your family can handle cookie orders."),
     ]),
     S("voice", "Hi honey! Leave your troop meeting and meet me at the corner.", sender="Sounds like Mom", sender_emoji="🎤", stage="recognize", choices=[
-        ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
         ("🙋", "Ask my troop leader", 2, "Yes! Check first. Use your family code word."),
-        ("⏳", "Wait and see", 1, "Good to wait. Asking your troop leader is best."),
+        ("🏃", "Go right away", 0, "Computers can copy voices. Always check first."),
     ]),
     S("ask", "A troop friend says something bad happened online. \"Don't tell anyone!\"", art="🤝", stage="report", choices=[
         ("🤐", "Keep the secret", 0, "Good friends get help for friends."),
         ("💛", "Tell my troop leader", 2, "Yes! That's what a real friend does."),
-        ("🤷", "Let them handle it", 0, "Some things are too big for kids alone."),
     ]),
     S("ask", "Something got downloaded on your family's tablet.", art="📱", stage="recovery", choices=[
-        ("🗑️", "Delete it, say nothing", 0, "Always tell! Your family can help fix it."),
         ("🙋", "Tell my family", 2, "Perfect! Telling fast is the best."),
-        ("⏰", "Tell later", 1, "Better to tell right now."),
+        ("🗑️", "Delete it, don't tell", 0, "Always tell! Your family can help fix it."),
     ]),
 ]
 
@@ -476,6 +393,18 @@ GROUPS = [
         "tracks": {"beginner": SCOUTS},
     },
 ]
+
+
+def check(where, scene):
+    """Refuse a scene that breaks the two-answer rule (see the top of this file)."""
+    choices = scene["choices"]
+    problem = None
+    if sorted(c[2] for c in choices) != [0, 2]:
+        problem = "needs exactly two answers: one worth 2 (tell), one worth 0 (engage)"
+    elif any("say no" in c[1].lower() for c in choices):
+        problem = 'has an answer that says "say no"'
+    if problem:
+        raise CommandError(f"{where}: \"{scene['prompt']}\" {problem}.")
 
 
 TRACKS = [
@@ -553,6 +482,8 @@ class Command(BaseCommand):
         made = 0
         for track, scenarios in plan:
             for s_index, s in enumerate(scenarios):
+                check(f"{grade.label}, {track.get_difficulty_display()}, round {s_index + 1}", s)
+
                 # update in place, keyed on (track, order).
                 #
                 # This MUST NOT delete and recreate. Completion rows

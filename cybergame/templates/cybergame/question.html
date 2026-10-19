@@ -57,10 +57,12 @@
               <span data-say="You are playing {{ scenario.sender|default:'Pixel Park' }}.">🎮 {{ scenario.sender|default:"Pixel Park" }}</span>
               {% with r=hotspots.report %}
                 {% if r %}
+                  {# hotspot is still named "report"; the answer is to tell #}
                   <button class="report-btn" type="submit" name="choice" value="{{ r.pk }}"
                           {% if chosen %}disabled{% endif %}
-                          data-say="There is a report button.">
-                    <span aria-hidden="true">🚩</span> Report
+                          aria-label="{{ r.text }}"
+                          data-say="There is a tell button.">
+                    <span aria-hidden="true">{{ r.emoji|default:"🙋" }}</span> Tell
                   </button>
                 {% endif %}
               {% endwith %}
