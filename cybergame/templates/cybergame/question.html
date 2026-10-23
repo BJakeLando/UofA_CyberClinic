@@ -1,4 +1,9 @@
 {% extends "cybergame/base.html" %}
+{% load static %}
+
+{% block head %}
+  {% if scenario.kind == "tablet" %}<link rel="stylesheet" href="{% static 'cybergame/tablet.css' %}">{% endif %}
+{% endblock %}
 
 {% block title %}{{ grade.title }} — Round {{ number_shown }}{% endblock %}
 
@@ -162,6 +167,41 @@
         </div>
       </form>
 
+    {% elif scenario.kind == "tablet" %}
+      {% if not chosen %}
+        {% comment %}
+          The whole pretend tablet is drawn by tablet.js from the round's
+          setup. When the round ends it posts what happened (outcome +
+          partial steps) through tab-form, and the view scores it.
+        {% endcomment %}
+        <div class="tab-wrap">
+          <div class="tab" id="tablet" aria-label="A pretend tablet. Use it like it's yours."></div>
+          <noscript><p class="hint">The pretend tablet needs JavaScript turned on.</p></noscript>
+          {% if track.show_hints %}
+            <div class="tab-hint" id="tab-hint" aria-live="polite"></div>
+          {% endif %}
+          <div class="tab-controls">
+            <button type="button" class="tab-toggle" id="tab-sound" aria-pressed="true">🔊 Sound</button>
+            {% if track.show_hints %}
+              <button type="button" class="tab-toggle" id="tab-tips" aria-pressed="true">💡 Tips</button>
+            {% endif %}
+            <button type="button" class="btn tab-finish" id="tab-finish">✋ I'm finished</button>
+          </div>
+          <form method="post" id="tab-form" hidden>
+            {% csrf_token %}
+            <input type="hidden" name="outcome" value="">
+            <input type="hidden" name="flags" value="">
+          </form>
+        </div>
+        {{ tablet|json_script:"tablet-data" }}
+        <script src="{% static 'cybergame/tablet.js' %}"></script>
+      {% else %}
+        <div class="tab-recap" data-say="{{ scenario.setup.recap }}">
+          <span class="tab-recap-icon" aria-hidden="true">📱</span>
+          <p>{{ scenario.setup.recap }}</p>
+        </div>
+      {% endif %}
+
     {% else %}
       <div class="ask">
         <div class="ask-art" aria-hidden="true">{{ scenario.art }}</div>
@@ -169,7 +209,7 @@
       </div>
     {% endif %}
 
-    {% if not chosen and track.show_hints %}
+    {% if not chosen and track.show_hints and scenario.kind != "tablet" %}
       {% if scenario.hint %}
         <p class="hint" data-say="Hint. {{ scenario.hint }}">{{ scenario.hint }}</p>
       {% elif scenario.kind == "device" or scenario.kind == "text" %}
@@ -178,7 +218,9 @@
     {% endif %}
   </section>
 
-  {% if not chosen %}
+  {% if not chosen and scenario.kind == "tablet" %}
+    {# the tablet is the question #}
+  {% elif not chosen %}
     {% if track.show_hints %}
       <div class="question-row">
         <h2 class="question" data-say="{{ scenario.question }}">{{ scenario.question }}</h2>
@@ -202,8 +244,19 @@
     <section class="result result-{{ tier }}" id="result">
       <div class="result-emoji" aria-hidden="true">{{ result_emoji }}</div>
       <p class="result-head" data-say="{{ result_head }}">{{ result_head }}</p>
+      {% if scenario.kind == "tablet" %}
+        <p class="you-did" data-say="You: {{ chosen.text }}">
+          <span class="you-did-tag">You</span><span aria-hidden="true">{{ chosen.emoji }}</span> {{ chosen.text }}
+        </p>
+      {% endif %}
       <p class="result-body" data-say="{{ chosen.feedback }}">{{ chosen.feedback }}</p>
       {% if gained %}<p class="gained" data-say="Plus {{ gained }} stars">+{{ gained }} ⭐</p>{% endif %}
+
+      {% if scenario.kind == "tablet" and scenario.setup.lesson %}
+        <p class="lesson" data-say="Remember: {{ scenario.setup.lesson }}">
+          <span class="lesson-tag">Remember</span>{{ scenario.setup.lesson }}
+        </p>
+      {% endif %}
 
       {% if tier != "best" and best_choice %}
         <div class="best-pick" data-say="The best move is: {{ best_choice.text }}">

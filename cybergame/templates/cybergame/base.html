@@ -10,6 +10,7 @@
     on every page view. The font is served from our own static files instead.
   {% endcomment %}
   <link rel="stylesheet" href="{% static 'cybergame/style.css' %}">
+  {% block head %}{% endblock %}
 </head>
 <body>
   <main class="shell">

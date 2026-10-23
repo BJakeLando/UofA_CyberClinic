@@ -13,13 +13,17 @@ Clinic clear of anyone else's trademarks.
 Never say "grown-up" or "adult" on its own: a child should be pointed at a
 teacher or a family member, not at whichever adult is nearest.
 
+Beginner scenes live here. Intermediate and Advanced play the pretend
+tablet, whose rounds live in cybergame/tablet_content.py.
+
 Scene kinds:
   chat   - a chat message from a player   (needs sender + sender_emoji)
   popup  - a pop-up ad                    (needs art)
   voice  - a voice message                (needs sender + sender_emoji)
   ask    - a plain question               (needs art)
+  tablet - a whole pretend tablet         (tablet_content.py)
 
-Every scene has exactly TWO answers, at every level:
+Every Beginner scene has exactly TWO answers:
   2 = tell a teacher or family member
   0 = engage - reply, tap, send, go, keep it secret, deal with it alone
 
@@ -35,7 +39,8 @@ Keep words short. Answer buttons: 4 words or less. Feedback: one short sentence.
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from cybergame.models import Grade, Track, Scenario, Choice
+from cybergame.models import Choice, Grade, Player, Scenario, Track
+from cybergame.tablet_content import ROUNDS as TABLET
 
 
 def S(kind, prompt, choices, stage="decide", sender="", sender_emoji="", art="", question="What do you do?"):
@@ -198,146 +203,6 @@ CONTENT = [
 
 
 # ---------------------------------------------------------------------------
-# Device scenes.  The player taps the tablet itself instead of reading a list.
-#
-# Intermediate and Advanced share this content. The only difference is
-# Track.show_hints: Intermediate still shows the question line and the worded
-# answer buttons underneath, Advanced shows the screen and nothing else.
-#
-# Two answers, one per hotspot:
-#   bait   - the tempting button inside the pop-up   (0 points)
-#   report - the Tell button in the game bar         (2 points)
-#
-# The hotspot is still called "report" in the database, but the button says
-# Tell: reporting and closing the pop-up were dropped as in-between answers.
-# With no close hotspot the pop-up draws without its little X.
-# ---------------------------------------------------------------------------
-
-def D(app, prompt, art, bait, stage="recognize"):
-    """One tablet scene. bait is (emoji, text, feedback)."""
-    return {
-        "kind": "device", "prompt": prompt, "art": art, "sender": app,
-        "sender_emoji": "", "stage": stage, "question": "What do you do?",
-        "choices": [
-            (bait[0], bait[1], 0, bait[2], "bait"),
-            ("🙋", TELL, 2, "Yes! Don't tap anything. Tell a teacher or family member.", "report"),
-        ],
-    }
-
-
-# ---------------------------------------------------------------------------
-# Text-message scenes (kind="text")
-#
-# A phone showing one text from a number that is NOT in contacts, claiming to
-# be somebody the kid knows. The message looks completely ordinary on purpose.
-# The tell is structural and visible on screen: an unknown number at the top,
-# and a saved family contact sitting right underneath it.
-#
-# Two answers, one per hotspot:
-#   bait    - the friendly quick reply                        (0 points)
-#   verify  - call a family member already saved in contacts  (2 points)
-#
-# `hint` shows on Intermediate only (Track.show_hints). Advanced gets the
-# identical screen with no hint and no answer list.
-# ---------------------------------------------------------------------------
-
-def T(number, prompt, bait, verify, hint, stage="decide"):
-    """One text-message scene. bait/verify are (emoji, text, feedback)."""
-    return {
-        "kind": "text", "prompt": prompt, "art": "", "sender": number,
-        "sender_emoji": "", "stage": stage, "question": "What do you do?",
-        "hint": hint,
-        "choices": [
-            (bait[0], bait[1], 0, bait[2], "bait"),
-            (verify[0], verify[1], 2, verify[2], "verify"),
-        ],
-    }
-
-
-# 3rd and 4th: someone claiming to be a classmate, after a password.
-TEXT_CLASSMATE = T(
-    "+1 520-555-0147",
-    "hey its Jayden from class!! i got a new phone 📱 whats ur Minecr@ft "
-    "password so i can send u stuff",
-    ("💬", "Send it",
-     "Never send a password, not even to a friend. Real friends do not ask."),
-    ("📞", "Call MOM",
-     "Yes! Don't reply. Your mom can help check if it is really Jayden."),
-    hint="This text came from a random number, not a number saved in your "
-         "phone.",
-)
-
-# 5th and 6th: someone claiming to be a parent, trying to get them to walk out.
-TEXT_PARENT = T(
-    "+1 520-555-0182",
-    "Hey this is Dad 😊 I got a new phone. Can you come outside and meet me?",
-    ("💬", "OK, coming!",
-     "Anyone can type that they are your dad. That number is not his."),
-    ("📞", "Call DADDY",
-     "You called the number already saved for your dad, and asked your family "
-     "code word if you have one. That is exactly right."),
-    hint="Your dad's real number is saved under DADDY. This text came from a "
-         "random number.",
-)
-
-DEVICE_CONTENT = {
-    3: [
-        D("Pixel Park", "CLICK HERE FOR FREE GOLD!", "🪙",
-          ("🪙", "Tap to get gold", "Free gold pop-ups are a trick to take your stuff.")),
-        D("Pixel Park", "YOU WON A FREE PET! TAP NOW!", "🐶",
-          ("🐶", "Tap to get pet", "Real games do not give pets away in a pop-up.")),
-        D("Pixel Park", "YOUR GAME WILL DELETE IN 60 SECONDS!", "⏳",
-          ("⏳", "Tap to save game", "Scary countdowns are there to make you hurry. Slow down.")),
-        D("Pixel Park", "TAP TO GET 10,000 FREE COINS!", "💰",
-          ("💰", "Tap for coins", "If it sounds too good to be true, it is.")),
-        D("Pixel Park", "YOU ARE PLAYER NUMBER 1,000,000! CLAIM PRIZE!", "🎉",
-          ("🎉", "Claim my prize", "Everybody sees this same message. Nobody wins.")),
-        TEXT_CLASSMATE,  # always last: appending never
-        # shifts the order of scenes kids already played
-    ],
-    4: [
-        D("Pixel Park", "FREE R0BUX! TAP HERE NOW!", "⭐",
-          ("⭐", "Tap for R0bux", "Look at the spelling. Real names are not written that way.")),
-        D("Pixel Park", "ACCOUNT LOCKED! TYPE YOUR PASSWORD TO UNLOCK", "🔒",
-          ("🔑", "Type my password", "A real game never asks for your password in a pop-up.")),
-        D("Pixel Park", "CLICK HERE FOR FREE GOLD!", "🪙",
-          ("🪙", "Tap to get gold", "Free gold pop-ups are a trick to take your stuff.")),
-        D("Pixel Park", "CHAT WITH US ON TELEGR@M TO GET YOUR PRIZE", "💬",
-          ("💬", "Go to the chat app", "Moving you to another app gets you away from help.")),
-        D("Pixel Park", "SPIN THE WHEEL! YOU CANNOT LOSE!", "🎡",
-          ("🎡", "Spin the wheel", "\"You cannot lose\" always means somebody else wins.")),
-        TEXT_CLASSMATE,
-    ],
-    5: [
-        D("Pixel Park", "FREE RARE SKIN! JUST ENTER YOUR PASSWORD", "🎽",
-          ("🔑", "Enter my password", "Your password is never the price of a free thing.")),
-        D("Pixel Park", "CLAIM YOUR PRIZE ON THIS OTHER APP", "📱",
-          ("📱", "Open the other app", "Off the game means away from anyone who can help you.")),
-        D("Pixel Park", "ASK A PARENT FOR THEIR CARD TO KEEP PLAYING", "💳",
-          ("💳", "Go get the card", "Nobody should ask a kid to fetch a payment card.")),
-        D("Pixel Park", "SEE WHO LOOKED AT YOUR PROFILE! TAP!", "👀",
-          ("👀", "Tap to see", "This one runs on curiosity. That is the trick.")),
-        D("Pixel Park", "MINECR@FT MODS - FREE DOWNLOAD - TAP", "⬇️",
-          ("⬇️", "Download it", "Downloads from a pop-up can break the whole device.")),
-        TEXT_PARENT,
-    ],
-    6: [
-        D("Pixel Park", "SEND A PHOTO OF YOURSELF TO UNLOCK THIS LEVEL", "📸",
-          ("📸", "Send a photo", "No real game ever needs a picture of you. Never send one.")),
-        D("Pixel Park", "WE ARE THE GAME TEAM. VERIFY YOUR PASSWORD.", "🛡️",
-          ("🛡️", "Verify password", "Looking official is the whole trick. Staff never ask.")),
-        D("Pixel Park", "YOUR FRIEND SENT YOU 5,000 COINS! TAP TO ACCEPT", "🎁",
-          ("🎁", "Accept the gift", "Accounts get stolen. A teacher or family member can help check.")),
-        D("Pixel Park", "ENTER THE CODE FROM YOUR PHONE TO CONTINUE", "🔢",
-          ("🔢", "Enter the code", "That code is the lock on your account. It stays with you.")),
-        D("Pixel Park", "UNLIMITED MONEY MOD - TAP TO INSTALL", "⬇️",
-          ("⬇️", "Install the mod", "Cheat downloads are one of the easiest ways to get hacked.")),
-        TEXT_PARENT,
-    ],
-}
-
-
-# ---------------------------------------------------------------------------
 # Groups - played instead of a grade.
 #
 # Girl Scouts uses the Beginner style (chat, voice and plain questions with
@@ -386,32 +251,95 @@ SCOUTS = [
 ]
 
 # Group numbers start at 100 so they never collide with a grade (see Grade).
+# Girl Scouts found the worded questions too easy to guess, so they get the
+# tablet levels too.
 GROUPS = [
     {
         "number": 100, "label": "Girl Scouts",
         "intro": "Trail friends, troop chats and cookie sales. Spot the tricks!",
-        "tracks": {"beginner": SCOUTS},
+        "tracks": {"beginner": SCOUTS, "intermediate": TABLET, "advanced": TABLET},
     },
 ]
 
 
 def check(where, scene):
-    """Refuse a scene that breaks the two-answer rule (see the top of this file)."""
+    """Refuse a scene that breaks the rules, so a bad deploy stops early.
+
+    Beginner: exactly two answers, one worth 2 (tell), one worth 0 (engage).
+    Tablet: a 3-star best move, a "done" outcome for "I'm finished", every
+    partial is a real outcome, and every key the tablet can send is scored.
+    Nothing a kid can see may say "say no".
+    """
     choices = scene["choices"]
+    keys = {c[4] for c in choices if len(c) > 4}
     problem = None
-    if sorted(c[2] for c in choices) != [0, 2]:
-        problem = "needs exactly two answers: one worth 2 (tell), one worth 0 (engage)"
-    elif any("say no" in c[1].lower() for c in choices):
+    if any("say no" in c[1].lower() for c in choices):
         problem = 'has an answer that says "say no"'
+    elif scene["kind"] != "tablet":
+        if sorted(c[2] for c in choices) != [0, 2]:
+            problem = "needs exactly two answers: one worth 2 (tell), one worth 0 (engage)"
+    elif max(c[2] for c in choices) != 3:
+        problem = "needs a best move worth 3 stars"
+    elif "done" not in keys:
+        problem = 'needs a "done" outcome for the I\'m finished button'
+    elif not set(scene["setup"].get("partials", [])) <= keys:
+        problem = "lists a partial that isn't one of its outcomes"
+    else:
+        missing = sorted(_acts(scene["setup"]) - keys)
+        if missing:
+            problem = "can send actions with no outcome: " + ", ".join(missing)
     if problem:
         raise CommandError(f"{where}: \"{scene['prompt']}\" {problem}.")
 
 
+# Fields in a tablet setup whose value is an action key the tablet can send.
+ACT_FIELDS = {"act", "no_reply_act", "call", "block", "junk", "delete",
+              "report", "add", "close", "open"}
+
+
+def _acts(setup):
+    """Every action key a tablet round's setup can send."""
+    found = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k in ACT_FIELDS and isinstance(v, str):
+                    found.add(v)
+                else:
+                    walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    # notify's "open" names the screen to open, not an action
+    walk({k: v for k, v in setup.items() if k not in ("notify", "partials")})
+    return found
+
+
 TRACKS = [
     ("beginner",     "🌱", "Words and pictures, with hints", True),
-    ("intermediate", "⚡", "Real screens, hints still on",    True),
-    ("advanced",     "🔥", "Real screens, no hints",          False),
+    ("intermediate", "⚡", "A real tablet, with tips",       True),
+    ("advanced",     "🔥", "A real tablet. No tips at all.", False),
 ]
+
+
+def forget_if_replaced(track, order, s):
+    """A slot that now holds a different kind of scene is a new scene.
+
+    Scenes update in place, keyed on (track, order), so players keep their
+    stars when wording changes. But when a one-pop-up device scene becomes a
+    whole tablet round, the old answer says nothing about the new round.
+    Drop those completions and take their stars back off the player, so the
+    round shows as not played yet and nobody gets stars twice.
+    """
+    old = Scenario.objects.filter(track=track, order=order).first()
+    if old is None or old.kind == s["kind"]:
+        return
+    for c in old.completions.select_related("player"):
+        Player.objects.filter(pk=c.player_id).update(
+            total_points=max(0, c.player.total_points - c.points))
+    old.completions.all().delete()
 
 
 class Command(BaseCommand):
@@ -427,20 +355,19 @@ class Command(BaseCommand):
             self.stdout.write("Cleared existing content.")
 
         for g_index, g in enumerate(CONTENT):
-            device = DEVICE_CONTENT.get(g["number"], [])
             made = self.load(g, Grade.Kind.GRADE, g_index, {
                 "beginner": g["scenarios"],
-                "intermediate": device,
-                "advanced": device,
+                "intermediate": TABLET,
+                "advanced": TABLET,
             })
             self.stdout.write(
                 f"{g['label']}: {len(g['scenarios'])} beginner, "
-                f"{len(device)} device x2 ({made} scenes total)"
+                f"{len(TABLET)} tablet x2 ({made} scenes total)"
             )
 
         for g_index, g in enumerate(GROUPS, start=len(CONTENT)):
             made = self.load(g, Grade.Kind.GROUP, g_index, g["tracks"])
-            levels = ", ".join(g["tracks"])
+            levels = ", ".join(f"{len(v)} {k}" for k, v in g["tracks"].items())
             self.stdout.write(f"{g['label']}: {levels} ({made} scenes total)")
 
     def load(self, g, kind, g_index, content):
@@ -483,6 +410,7 @@ class Command(BaseCommand):
         for track, scenarios in plan:
             for s_index, s in enumerate(scenarios):
                 check(f"{grade.label}, {track.get_difficulty_display()}, round {s_index + 1}", s)
+                forget_if_replaced(track, s_index, s)
 
                 # update in place, keyed on (track, order).
                 #
@@ -503,6 +431,7 @@ class Command(BaseCommand):
                         "art": s["art"],
                         "question": s["question"],
                         "hint": s.get("hint", ""),
+                        "setup": s.get("setup", {}),
                         "active": True,
                     },
                 )

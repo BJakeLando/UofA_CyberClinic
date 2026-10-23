@@ -117,6 +117,35 @@ def _best_points(scenario):
     return max((c.points for c in scenario.choices.all()), default=0)
 
 
+def _tablet_choice(scenario, choices, outcome, flags):
+    """Turn what happened on the pretend tablet into one scored outcome.
+
+    `outcome` is the action that ended the round, or "done" when the kid
+    tapped I'm finished. On "done", the best partial step they took counts
+    (reporting in the game, closing the pop-up); with none, "done" itself.
+    Unknown keys score nothing, so a tampered form can't invent stars.
+    """
+    by_key = {c.hotspot: c for c in choices if c.hotspot}
+    partials = set(scenario.setup.get("partials", []))
+    if outcome == "done":
+        taken = [by_key[f] for f in flags if f in partials and f in by_key]
+        if taken:
+            return max(taken, key=lambda c: c.points)
+        return by_key.get("done")
+    if outcome in partials:
+        return None
+    return by_key.get(outcome)
+
+
+def _tablet_data(scenario, choices, track):
+    """What the tablet script needs: the round, plus how each key scores."""
+    return {
+        **scenario.setup,
+        "outcomes": {c.hotspot: c.points for c in choices if c.hotspot},
+        "hints": track.show_hints,
+    }
+
+
 def _track_points(player, track):
     if player is None:
         return 0
@@ -400,7 +429,11 @@ def question(request, number, difficulty, index):
     gained = 0
 
     if request.method == "POST":
-        chosen = next((c for c in choices if str(c.pk) == request.POST.get("choice")), None)
+        if scenario.kind == "tablet":
+            flags = [f for f in request.POST.get("flags", "").split(",") if f]
+            chosen = _tablet_choice(scenario, choices, request.POST.get("outcome", ""), flags)
+        else:
+            chosen = next((c for c in choices if str(c.pk) == request.POST.get("choice")), None)
         if chosen:
             comp, created = Completion.objects.get_or_create(
                 player=player, scenario=scenario,
@@ -428,8 +461,10 @@ def question(request, number, difficulty, index):
             tier = ("best" if chosen.points == best_points
                     else "ok" if chosen.points > 0 else "try")
 
-    heads = {"best": ("🌟", "Best move!"), "ok": ("👍", "Good!"),
+    heads = {"best": ("🌟", "Best move!"), "ok": ("👍", "Good, but there's a better move."),
              "try": ("🤔", "Hmm, not quite.")}
+    if scenario.kind != "tablet":
+        heads["ok"] = ("👍", "Good!")
     result_emoji, result_head = heads.get(tier, ("", ""))
 
     done_ids = set(
@@ -449,6 +484,8 @@ def question(request, number, difficulty, index):
                    "next_index": index + 1,
                    "is_last": index + 1 >= len(scenarios),
                    "score": _track_points(player, track),
+                   "tablet": (_tablet_data(scenario, choices, track)
+                              if scenario.kind == "tablet" and not chosen else None),
                    **_player_context(player)})
 
 

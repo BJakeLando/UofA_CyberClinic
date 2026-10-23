@@ -95,6 +95,7 @@ class Scenario(models.Model):
         ASK = "ask", "Plain question"
         DEVICE = "device", "Tablet screen"      # tap the screen itself
         TEXT = "text", "Text message"           # tap the screen itself
+        TABLET = "tablet", "Whole tablet"       # home screen + apps, see setup
 
     grade = models.ForeignKey(Grade, related_name="scenarios", on_delete=models.CASCADE)
     track = models.ForeignKey(
@@ -117,6 +118,11 @@ class Scenario(models.Model):
     # giving the answer away. Blank falls back to a generic line.
     hint = models.CharField(max_length=160, blank=True)
 
+    # Tablet scenes only: everything the pretend tablet needs for this round
+    # (texts, emails, contacts, who answers the phone, which taps count).
+    # Written by seed_content from cybergame/tablet_content.py.
+    setup = models.JSONField(default=dict, blank=True)
+
     class Meta:
         ordering = ["grade__number", "order"]
 
@@ -125,17 +131,15 @@ class Scenario(models.Model):
 
 
 class Choice(models.Model):
-    """One answer.
+    """One answer, or for a tablet scene, one way the round can end.
 
-    For device scenes, `hotspot` decides where the answer lives on the
-    simulated screen instead of being a button in a list.
+    `hotspot` is a key:
+      device scenes  - where the answer sits on the screen (bait, report)
+      text scenes    - bait, verify
+      tablet scenes  - the action that ends the round ("tell", "click_link",
+                       "done", ...). The tablet reports the key; the view
+                       turns it into one of these rows.
     """
-
-    class Hotspot(models.TextChoices):
-        BAIT = "bait", "The tempting button"
-        CLOSE = "close", "The little X"
-        REPORT = "report", "The report flag"
-        VERIFY = "verify", "The saved contact"
 
     scenario = models.ForeignKey(Scenario, related_name="choices", on_delete=models.CASCADE)
     text = models.CharField(max_length=200)
@@ -144,7 +148,7 @@ class Choice(models.Model):
     order = models.PositiveSmallIntegerField(default=0)
 
     emoji = models.CharField(max_length=16, blank=True)
-    hotspot = models.CharField(max_length=10, choices=Hotspot.choices, blank=True)
+    hotspot = models.CharField(max_length=24, blank=True)
 
     class Meta:
         ordering = ["order"]
