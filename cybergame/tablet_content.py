@@ -474,10 +474,10 @@ VIRUS = tablet(
 # drawing the character: the picture is an original, blurred shadow-cat,
 # and the account name is misspelled like every other brand in the game.
 #
-# Mom doesn't answer, on purpose. The lesson is to keep going down the list
-# until a family member or school staff picks up. Calling 911 is two stars,
-# not three: police do want threats reported, but 911 is for danger
-# happening right now, and the family member or school calls the police.
+# Calling or texting any family member or teacher is the best move, and
+# every one of them picks up. Calling 911 is two stars, not three: police
+# do want threats reported, but 911 is for danger happening right now, and
+# the family member or school calls the police.
 # ---------------------------------------------------------------------------
 
 THREAT_NUMBER = "+1 (520) 555-0166"
@@ -488,14 +488,12 @@ THREAT = tablet(
     "threat",
     "A text with a creepy picture says something bad will happen at your school.",
     [
-        ("📞", "Kept trying until someone answered", 3,
-         "Exactly right. Mom didn't answer, so you tried the next person. A threat always needs a family "
-         "member or school staff right away. They call the police.", "tell"),
+        ("📞", "Told a family member or teacher right away", 3,
+         "Exactly right. A threat always needs a family member or school staff right away. "
+         "They call the police.", "tell"),
         ("🚨", "Called 911", 2,
          "Police do want to know about threats, so that's not wrong. But 911 is for danger happening right now. "
-         "First try Dad, your teacher or the school office. They'll call the police for you.", "call_911"),
-        ("⏳", "Tried Mom, then stopped", 1,
-         "Good start! When someone doesn't answer, try the next person: Dad, your teacher or the school office.", "tried"),
+         "First tell a family member or your teacher. They'll call the police for you.", "call_911"),
         ("🚫", "Blocked the number", 1,
          "Blocking is okay, but a threat has to be told right away, and the police may need to see it.", "block"),
         ("⏹️", "Didn't tell anyone", 0,
@@ -514,8 +512,8 @@ THREAT = tablet(
     stage="report",
     recap="A text from a number you didn't know had a creepy picture and said something bad would happen at your school.",
     lesson="Don't answer, don't share, don't delete. Tell a family member or school staff right away. "
-           "If one person doesn't answer, try the next. 911 is for danger happening right now.",
-    nudge="This one is serious. Who can you reach right now? If someone doesn't answer, keep going.",
+           "911 is for danger happening right now.",
+    nudge="This one is serious. Who should you tell right now?",
     time="8:14",
     notify={"delay": 1600, "app": "messages", "open": "t_threat", "sound": "text",
             "title": THREAT_NUMBER, "body": "📷 Photo"},
@@ -529,7 +527,9 @@ THREAT = tablet(
         "call": "call_unknown", "block": "block", "junk": "block", "delete": "delete",
     }],
     calls={
-        "mom": {"answer": False, "act": "tried"},
+        "mom": {"answer": True, "act": "tell",
+                "says": "I'm so glad you told me right away. Don't answer it and don't send it to anyone. "
+                        "I'm calling the school and the police now."},
         "dad": {"answer": True, "act": "tell",
                 "says": "I'm really glad you told me. Don't answer it and don't send it to anyone. "
                         "I'm calling the school and the police right now."},
@@ -545,10 +545,11 @@ THREAT = tablet(
         "911": {"act": "call_911"},
     },
     tell={"text": "I got a scary text with a creepy picture. It says something bad will happen at my school tomorrow.",
-          "act": "tell", "no_reply": ["mom"], "no_reply_act": "tried",
-          "replies": {"dad": "I'm calling the school and the police right now. Don't answer it and don't share it. Proud of you.",
+          "act": "tell",
+          "replies": {"mom": "Thank you for telling me right away ❤️ Don't answer it or share it. I'm calling the school and the police now.",
+                      "dad": "I'm calling the school and the police right now. Don't answer it and don't share it. Proud of you.",
                       "default": "Thank you for telling me. I'm calling the police right now. Don't answer it or share it."}},
-    partials=["tried", "block"],
+    partials=["block"],
 )
 
 
