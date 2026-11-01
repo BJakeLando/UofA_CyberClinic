@@ -232,6 +232,8 @@
     flags: [],
     ended: false,
     sheet: null,
+    notice: null,       // a game's own message box (report sent, blocked)
+    pop: null,          // "+1 ⭐" when a partial step counts
     call: null,
     banner: null,
     toast: null,
@@ -273,7 +275,9 @@
   function act(key, delay) {
     if (S.ended || !key) return "none";
     if (PARTIALS.indexOf(key) >= 0) {
+      var before = soFar();
       if (S.flags.indexOf(key) < 0) S.flags.push(key);
+      if (soFar() > before) progress(soFar() - before);
       return "flag";
     }
     if (Object.prototype.hasOwnProperty.call(OUT, key)) {
@@ -281,6 +285,38 @@
       return "end";
     }
     return "none";
+  }
+
+  // Stars the kid would get for tapping I'm finished right now.
+  function soFar() {
+    var best = 0;
+    S.flags.forEach(function (f) { if (OUT[f] > best) best = OUT[f]; });
+    return best;
+  }
+
+  // A partial step counted: say so, so the round never feels stuck. The
+  // stars pop in the tablet and the I'm finished button shows the total.
+  function progress(gained) {
+    Sound.meh();
+    S.pop = "+" + gained + " ⭐";
+    clearTimeout(progress.t);
+    progress.t = setTimeout(function () { S.pop = null; drawPop(); }, 2200);
+    drawPop();
+    finishLabel();
+    if (finishBtn) finishBtn.classList.add("is-ready");
+  }
+
+  function drawPop() {
+    var el = document.getElementById("tab-pop");
+    if (!el) return;
+    el.textContent = S.pop || "";
+    el.classList.toggle("is-on", !!S.pop);
+  }
+
+  function finishLabel() {
+    if (!finishBtn) return;
+    var n = soFar();
+    finishBtn.textContent = n ? "✋ I'm finished · ⭐ " + n + " so far" : "✋ I'm finished";
   }
 
   function finish(key, delay) {
@@ -328,6 +364,7 @@
         '<div class="tab-banner" id="tab-banner"></div>' +
         '<div class="tab-overlay" id="tab-overlay"></div>' +
         '<div class="tab-toast" id="tab-toast" role="status"></div>' +
+        '<div class="tab-pop" id="tab-pop" role="status" aria-live="polite"></div>' +
       "</div>" +
       '<button type="button" class="tab-home" data-act="home" aria-label="Home button" ' +
         'data-tip="Home: closes the app and shows all apps"><span></span></button>' +
@@ -655,13 +692,13 @@
         '<span class="g-spr g-tree1">🌳</span><span class="g-spr g-tree2">🌲</span><span class="g-spr g-house">🏠</span>' +
         '<span class="g-spr g-pond"></span>' +
         '<span class="g-spr g-p1"><em>Bluebird42</em>🐦</span>' +
-        '<span class="g-spr g-p2"><em>BlockBuddy</em>🧸</span>' +
+        (S.gameBlocked[g.friend] ? "" : '<span class="g-spr g-p2"><em>' + esc(g.friend || "") + "</em>🧸</span>") +
         '<span class="g-spr g-you"><em>You</em>🧒</span>' +
       "</div>" +
       '<div class="g-chat">' +
         '<div class="g-tabs"><span class="is-on">All</span><span>Game</span><span>Private</span><span>Clan</span></div>' +
         '<div class="g-lines scroll">' + lines + "</div>" +
-        '<button type="button" class="g-input" data-act="game-chat"' + (HINTS ? ' data-tip="Chat with players"' : "") +
+        '<button type="button" class="g-input" data-act="game-chat"' + "" +
           ">Tap here to chat…</button>" +
       "</div></div>";
   }
@@ -774,6 +811,17 @@
           (HINTS ? ' data-tip="Hangs up"' : "") + ">" + svg("end") + "</button>" +
       "</div>";
     }
+    if (S.notice) {
+      var nt = S.notice;
+      return '<div class="sheet-back"></div>' +
+        '<div class="notice" role="alertdialog" aria-label="' + esc(nt.title) + '">' +
+          '<div class="notice-head"><span class="notice-icon" aria-hidden="true">' + nt.icon + "</span>" +
+            '<span class="notice-from">Pixel Park Safety</span></div>' +
+          '<div class="notice-title">' + esc(nt.title) + "</div>" +
+          nt.lines.map(function (l) { return '<p class="notice-text">' + esc(l) + "</p>"; }).join("") +
+          '<button type="button" class="notice-ok" data-act="notice-ok">OK</button>' +
+        "</div>";
+    }
     if (S.sheet) {
       var sh = S.sheet;
       return '<button type="button" class="sheet-back" data-act="sheet-close" aria-label="Close"></button>' +
@@ -831,6 +879,7 @@
   function viewHint() {
     if (S.locked) return "Tap the screen to unlock the tablet.";
     if (S.call) return "You're on a call. The red button hangs up.";
+    if (S.notice) return "Read the message, then tap OK.";
     if (S.sheet) return "Pick one, or tap Cancel.";
     if (!S.app) return "Tap an app to open it. The round button is Home.";
     if (S.app === "messages") {
@@ -858,7 +907,7 @@
     if (!HINTS || !tipsOn || S.ended || S.locked) return;
     var bezel = root.querySelector(".tab-bezel"), box = bezel.getBoundingClientRect();
     var scr = root.querySelector(".tab-screen").getBoundingClientRect();
-    var busy = !!(S.sheet || S.call);
+    var busy = !!(S.sheet || S.call || S.notice);
     var placed = [];
     var wide = root.classList.contains("tab-wide");
 
@@ -961,9 +1010,12 @@
     }
   }
 
+  // Home always goes home, like a real tablet: it closes any open menu or
+  // message box on the way, so it can never leave a kid stuck.
   function goHome() {
     if (S.call) return;
-    if (S.sheet) { S.sheet = null; render(); return; }
+    S.notice = null;
+    S.sheet = null;
     if (S.app === "web" && S.popup) {
       S.popup = false;
       Sound.alarmOff();
@@ -1084,6 +1136,10 @@
           return { label: why, run: function () {
             S.sheet = null;
             gameLine({ kind: "system", text: "Thanks! A Pixel Park moderator will look at your report about " + who + "." });
+            S.notice = { icon: "✅", title: "Report sent",
+              lines: ["Thanks for helping keep Pixel Park safe. Our safety team will look at " + who + "'s messages.",
+                      "If anyone online makes you feel unsafe, tell a family member or teacher."] };
+            render();
             if (isPm) act(g.report);
           } };
         }));
@@ -1092,6 +1148,9 @@
         S.sheet = null;
         S.gameBlocked[who] = true;
         gameLine({ kind: "system", text: "You blocked " + who + ". You won't see their messages." });
+        S.notice = { icon: "🚫", title: who + " is blocked",
+          lines: ["They can't send you messages or see you online anymore.", "If anyone online makes you feel unsafe, tell a family member or teacher."] };
+        render();
         if (isPm) act(g.block);
       } }
     ];
@@ -1163,6 +1222,7 @@
     junk: function () { var t = thread(S.id); block(t, t.junk, "Reported as junk and blocked"); },
     "sheet-opt": function (d) { var o = S.sheet && S.sheet.options[+d.i]; if (o) o.run(); },
     "sheet-close": function () { S.sheet = null; render(); },
+    "notice-ok": function () { S.notice = null; render(); },
     "phone-tab": function (d) { S.tab = d.tab; render(); },
     key: function (d) { Sound.key(d.k); if (S.dial.length < 15) S.dial += d.k; render(); },
     "key-del": function () { S.dial = S.dial.slice(0, -1); render(); },
@@ -1263,13 +1323,13 @@
         finishBtn.classList.add("is-armed");
         armed = setTimeout(function () {
           armed = null;
-          finishBtn.textContent = "✋ I'm finished";
+          finishLabel();
           finishBtn.classList.remove("is-armed");
         }, 3000);
         return;
       }
       clearTimeout(armed);
-      finishBtn.textContent = "✋ I'm finished";
+      finishLabel();
       hangUp();
       finish("done", 0);
     });

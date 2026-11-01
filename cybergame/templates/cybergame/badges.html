@@ -1,0 +1,45 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}My badges — Cyber Squad{% endblock %}
+
+{% block content %}
+{% include "cybergame/_chip.html" %}
+
+<header class="home">
+  <div class="home-badge" aria-hidden="true">🏅</div>
+  <h1 class="home-title home-title-sm">My badges</h1>
+  <p class="home-sub">{{ earned }} of 3 earned</p>
+</header>
+
+<ul class="shelf">
+  {% for b in shelf %}
+    <li class="shelf-item{% if not b.award %} is-locked{% endif %}" style="--c1: {{ b.ribbon }}">
+      <div class="shelf-medal">
+        {% if b.award %}
+          {% include "cybergame/_badge.html" with b=b uid=forloop.counter %}
+        {% else %}
+          {% include "cybergame/_badge.html" with b=b uid=forloop.counter cls="is-locked" %}
+          <span class="shelf-lock" aria-hidden="true">🔒</span>
+        {% endif %}
+      </div>
+      <h2 class="shelf-name">{{ b.name }}</h2>
+      <p class="shelf-level">{{ b.level_name }}</p>
+      {% if b.award %}
+        <p class="shelf-where">{{ b.where }}<br>{{ b.award.earned_at|date:"M j, Y" }}</p>
+        <a class="btn btn-go shelf-print" href="{% url 'cybergame:certificate' b.slug %}">🖨️ Print</a>
+      {% else %}
+        <p class="shelf-how">Finish any {{ b.level_name }} level with no mistakes to earn it.</p>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+<p class="shelf-privacy">
+  Your badges belong to your squad name, <strong>{{ player.handle }}</strong>.
+  Cyber Squad never asks for your real name.
+</p>
+
+<div class="done-actions">
+  <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+</div>
+{% endblock %}

@@ -12,6 +12,16 @@
   {% if grade.intro %}<p class="panel-line">{{ grade.intro }}</p>{% endif %}
   <p class="panel-line">{{ total }} rounds. Win ⭐ stars!</p>
   {% if earned %}<p class="panel-line panel-progress">You have ⭐ {{ earned }} of {{ possible }} here already.</p>{% endif %}
+  {% if badge %}
+    <p class="badge-teaser{% if have_badge %} is-have{% endif %}">
+      <span class="badge-teaser-medal">{% include "cybergame/_badge.html" with b=badge uid="teaser" %}</span>
+      {% if have_badge %}
+        <span>You already have the <strong>{{ badge.name }}</strong> badge!</span>
+      {% else %}
+        <span>Get every round right the first time to earn the <strong>{{ badge.name }}</strong> badge!</span>
+      {% endif %}
+    </p>
+  {% endif %}
   <a class="btn btn-go" href="{% url 'cybergame:question' grade.number track.difficulty 0 %}">Start</a>
   {% if grade.skips_level_pick %}
     <a class="btn-back" href="{% url 'cybergame:grade_select' %}">Change group</a>

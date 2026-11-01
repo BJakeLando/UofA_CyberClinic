@@ -81,6 +81,10 @@ EMAILS = [
                              "Ms. Rivera"]},
 ]
 
+# The game friend in Pixel Park, who turns out to be the stranger. Also the
+# sender of the 3rd grade Beginner meet-up question, so the name stays the same.
+GAME_FRIEND = "BlockBuddy764"
+
 GAME_CHAT = [
     {"kind": "system", "text": "Welcome to Pixel Park! Season 3 is live."},
     {"kind": "public", "who": "Bluebird42", "text": "anyone want to trade carrots?"},
@@ -100,7 +104,7 @@ def tablet(key, prompt, outcomes, *, recap, lesson, nudge, stage="decide", **set
     for t in setup.pop("threads", []):
         threads[t["id"]] = t
     emails = setup.pop("emails", []) + deepcopy(EMAILS)
-    game = {"chat": deepcopy(GAME_CHAT), **setup.pop("game", {})}
+    game = {"chat": deepcopy(GAME_CHAT), "friend": GAME_FRIEND, **setup.pop("game", {})}
 
     full = {
         "key": key,
@@ -330,9 +334,9 @@ GAME_MEETUP = tablet(
     time="5:20",
     start="game",
     notify={"delay": 2400, "app": "game", "sound": "game",
-            "title": "Pixel Park", "body": "New private message from BlockBuddy"},
+            "title": "Pixel Park", "body": "New private message from " + GAME_FRIEND},
     game={
-        "pm": {"who": "BlockBuddy",
+        "pm": {"who": GAME_FRIEND,
                "text": "hey ur my best game friend 😊 do u live near the big park? wanna meet up "
                        "saturday?? dont tell ur parents, its our secret"},
         "replies": [{"text": "Sure! Where?", "act": "reply_meet"},

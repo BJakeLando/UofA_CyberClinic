@@ -1,0 +1,68 @@
+{% comment %}
+  One badge medal, drawn in SVG so it stays sharp at any size and prints cleanly.
+  include with: b = a badge from badges.BADGES, uid = anything unique on the page
+  (gradient ids must not repeat), cls = extra classes (e.g. "is-locked").
+  All artwork is original: a magnifier (Scout), a shield with a bolt (Warrior),
+  a wizard hat (Wizard).
+{% endcomment %}
+<svg class="badge-svg {{ cls }}" viewBox="0 0 200 232" role="img" aria-label="{{ b.name }} badge">
+  <defs>
+    <linearGradient id="rim-{{ b.slug }}{{ uid }}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="{{ b.rim1 }}"/>
+      <stop offset="0.5" stop-color="{{ b.rim2 }}"/>
+      <stop offset="1" stop-color="{{ b.rim3 }}"/>
+    </linearGradient>
+    <radialGradient id="core-{{ b.slug }}{{ uid }}" cx="0.38" cy="0.32" r="0.8">
+      <stop offset="0" stop-color="{{ b.core1 }}"/>
+      <stop offset="1" stop-color="{{ b.core2 }}"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ribbon tails behind the medal -->
+  <path d="M66 150 L46 226 L68 212 L84 230 L100 160 Z" fill="{{ b.ribbon_dark }}"/>
+  <path d="M134 150 L154 226 L132 212 L116 230 L100 160 Z" fill="{{ b.ribbon_dark }}"/>
+
+  <!-- medal: scalloped rim, metal ring, coloured core -->
+  <polygon points="{{ b.rosette }}" fill="url(#rim-{{ b.slug }}{{ uid }})" stroke="{{ b.rim3 }}" stroke-width="1.5"/>
+  <circle cx="100" cy="96" r="76" fill="url(#rim-{{ b.slug }}{{ uid }})" stroke="{{ b.rim3 }}" stroke-width="2"/>
+  <circle cx="100" cy="96" r="66" fill="url(#core-{{ b.slug }}{{ uid }})" stroke="{{ b.rim3 }}" stroke-width="2.5"/>
+  <circle cx="100" cy="96" r="59" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="2 5"/>
+
+  <!-- tier stars -->
+  {% for x in b.stars %}
+    <path transform="translate({{ x }} 46)" d="M0 -7 L2.1 -2.2 L7 -2.2 L3 1 L4.4 6 L0 3.1 L-4.4 6 L-3 1 L-7 -2.2 L-2.1 -2.2 Z" fill="{{ b.accent }}" stroke="#ffffff" stroke-width="0.8"/>
+  {% endfor %}
+
+  <!-- emblem, drawn in a 100 x 100 box -->
+  <g transform="translate(59 54) scale(0.82)">
+    {% if b.slug == "scout" %}
+      <circle cx="44" cy="42" r="24" fill="#ffffff" fill-opacity="0.18" stroke="#ffffff" stroke-width="9"/>
+      <path d="M62 60 L84 82" stroke="#ffffff" stroke-width="14" stroke-linecap="round"/>
+      <path d="M64 62 L83 81" stroke="{{ b.accent }}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M32 43 L41 52 L57 33" fill="none" stroke="{{ b.accent }}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    {% elif b.slug == "warrior" %}
+      <path d="M50 4 L88 17 V45 C88 69 72 87 50 96 C28 87 12 69 12 45 V17 Z" fill="#ffffff"/>
+      <path d="M50 13 L79 23 V45 C79 64 66 79 50 86 C34 79 21 64 21 45 V23 Z" fill="{{ b.core2 }}"/>
+      <path d="M57 20 L34 54 H49 L42 81 L67 44 H52 Z" fill="{{ b.accent }}" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
+    {% else %}
+      <path d="M20 22 A11 11 0 1 0 31 38 A8.5 8.5 0 1 1 20 22 Z" fill="{{ b.accent }}"/>
+      <path d="M28 76 L44 32 Q49 14 70 8 Q59 20 60 34 L74 76 Z" fill="#ffffff"/>
+      <rect x="29" y="64" width="44" height="10" rx="2" fill="{{ b.accent }}"/>
+      <ellipse cx="51" cy="79" rx="38" ry="8.5" fill="#ffffff"/>
+      <path transform="translate(50 47)" d="M0 -7 Q1.2 -1.2 7 0 Q1.2 1.2 0 7 Q-1.2 1.2 -7 0 Q-1.2 -1.2 0 -7 Z" fill="{{ b.core2 }}"/>
+      <path transform="translate(60 30) scale(0.7)" d="M0 -7 Q1.2 -1.2 7 0 Q1.2 1.2 0 7 Q-1.2 1.2 -7 0 Q-1.2 -1.2 0 -7 Z" fill="{{ b.core2 }}"/>
+      <path transform="translate(84 26)" d="M0 -8 Q1.4 -1.4 8 0 Q1.4 1.4 0 8 Q-1.4 1.4 -8 0 Q-1.4 -1.4 0 -8 Z" fill="#ffffff"/>
+      <path transform="translate(86 52) scale(0.6)" d="M0 -8 Q1.4 -1.4 8 0 Q1.4 1.4 0 8 Q-1.4 1.4 -8 0 Q-1.4 -1.4 0 -8 Z" fill="{{ b.accent }}"/>
+    {% endif %}
+  </g>
+
+  <!-- shine -->
+  <ellipse cx="78" cy="62" rx="44" ry="20" transform="rotate(-32 78 62)" fill="#ffffff" fill-opacity="0.14"/>
+
+  <!-- name banner -->
+  <path d="M24 142 L6 150 L15 158 L6 166 L24 172 Z" fill="{{ b.ribbon_dark }}"/>
+  <path d="M176 142 L194 150 L185 158 L194 166 L176 172 Z" fill="{{ b.ribbon_dark }}"/>
+  <path d="M20 140 Q100 152 180 140 L180 170 Q100 182 20 170 Z" fill="{{ b.ribbon }}" stroke="{{ b.rim2 }}" stroke-width="2"/>
+  <text x="100" y="166" text-anchor="middle" font-family="Fredoka, 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif"
+        font-size="{{ b.name_size }}" font-weight="700" letter-spacing="1.2" fill="#ffffff">{{ b.name|upper }}</text>
+</svg>

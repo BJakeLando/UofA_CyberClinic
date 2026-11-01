@@ -109,7 +109,7 @@ class Scenario(models.Model):
 
     # display fields
     kind = models.CharField(max_length=10, choices=Kind.choices, default=Kind.ASK)
-    sender = models.CharField(max_length=40, blank=True)          # "BlockBuddy", or app name for device
+    sender = models.CharField(max_length=40, blank=True)          # "BlockBuddy764", or app name for device
     sender_emoji = models.CharField(max_length=16, blank=True)    # avatar
     art = models.CharField(max_length=16, blank=True)             # big picture for pop-ups and plain questions
     question = models.CharField(max_length=80, default="What do you do?")
@@ -262,3 +262,30 @@ class Completion(models.Model):
     @property
     def is_perfect(self):
         return self.points >= self.best_possible
+
+
+class Award(models.Model):
+    """A no-mistakes badge: every round of one level, best move, first try.
+
+    Holds nothing about the child: the generated squad name it belongs to,
+    which badge, where it was earned, and when. One of each badge per
+    player, at most three in all.
+    """
+
+    class Badge(models.TextChoices):
+        SCOUT = "scout", "Cyber Scout"        # Beginner
+        WARRIOR = "warrior", "Cyber Warrior"  # Intermediate
+        WIZARD = "wizard", "Cyber Wizard"     # Advanced
+
+    player = models.ForeignKey(Player, related_name="awards", on_delete=models.CASCADE)
+    badge = models.CharField(max_length=10, choices=Badge.choices)
+    track = models.ForeignKey(Track, related_name="awards", on_delete=models.SET_NULL,
+                              null=True, blank=True)
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("player", "badge")
+        ordering = ["earned_at"]
+
+    def __str__(self):
+        return f"{self.player.handle}: {self.get_badge_display()}"

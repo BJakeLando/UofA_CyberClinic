@@ -5,6 +5,22 @@
 {% block content %}
 {% include "cybergame/_chip.html" %}
 
+{% if new_badge %}
+  <section class="badge-reveal" aria-live="polite">
+    <p class="badge-reveal-kicker" data-say="New badge!">🎉 New badge!</p>
+    <div class="badge-reveal-medal">
+      <span class="badge-rays" aria-hidden="true"></span>
+      {% include "cybergame/_badge.html" with b=badge uid="reveal" cls="is-big" %}
+    </div>
+    <h2 class="badge-reveal-title" data-say="You earned the {{ badge.name }} badge!">You earned the {{ badge.name }} badge!</h2>
+    <p class="badge-reveal-line" data-say="Every round right on the first try. No mistakes!">Every round right on the first try. No mistakes!</p>
+    <div class="done-actions">
+      <a class="btn btn-go" href="{% url 'cybergame:certificate' badge.slug %}">🖨️ Print my badge</a>
+      <a class="btn btn-next" href="{% url 'cybergame:my_badges' %}">🏅 My badges</a>
+    </div>
+  </section>
+{% endif %}
+
 <section class="panel" id="done">
   <div class="stars-row" aria-label="{{ stars }} out of 3 stars">
     {% for on in star_slots %}<span class="big-star{% if on %} is-on{% endif %}" aria-hidden="true">⭐</span>{% endfor %}
@@ -22,6 +38,21 @@
        data-say="Go back and fix {{ missed_count }} rounds for more stars.">
       🔁 Fix my {{ missed_count }} miss{{ missed_count|pluralize:"es" }} for more ⭐
     </a>
+  {% endif %}
+
+  {% if badge and not new_badge %}
+    {% if award %}
+      <a class="badge-note" href="{% url 'cybergame:my_badges' %}">
+        <span class="badge-note-medal">{% include "cybergame/_badge.html" with b=badge uid="note" %}</span>
+        <span>You have the <strong>{{ badge.name }}</strong> badge. Print it from My badges.</span>
+      </a>
+    {% elif first_try_misses %}
+      <p class="badge-note is-locked">
+        <span class="badge-note-medal">{% include "cybergame/_badge.html" with b=badge uid="note" cls="is-locked" %}</span>
+        <span>The <strong>{{ badge.name }}</strong> badge needs every round right on the first try.
+        Try the {{ badge.level_name }} level in another grade for a fresh chance!</span>
+      </p>
+    {% endif %}
   {% endif %}
 
   {% if next_rank %}

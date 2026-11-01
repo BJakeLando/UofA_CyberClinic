@@ -252,3 +252,102 @@ class ReseedKeepsProgressTests(SeededTestCase):
         self.assertEqual(scene.kind, "tablet")
         self.assertFalse(Completion.objects.filter(scenario=scene).exists())
         self.assertEqual(player.total_points, 5)
+
+
+class BadgeTests(SeededTestCase):
+    """No mistakes in a whole level = a badge, tied to the squad name only."""
+
+    def play_track(self, number, level, miss=()):
+        """Answer every round of a track; rounds in `miss` get a 0 first."""
+        track = Track.objects.get(grade__number=number, difficulty=level)
+        for i, scene in enumerate(track.scenarios.order_by("order")):
+            url = reverse("cybergame:question", args=[number, level, i])
+            choices = list(scene.choices.all())
+            best = max(choices, key=lambda c: c.points)
+            if i in miss:
+                worst = min(choices, key=lambda c: c.points)
+                self.answer(scene, url, worst)
+            self.answer(scene, url, best)
+        return track
+
+    def answer(self, scene, url, choice):
+        if scene.kind != "tablet":
+            return self.client.post(url, {"choice": choice.pk})
+        if choice.hotspot in scene.setup.get("partials", []):    # reached via I'm finished
+            return self.client.post(url, {"outcome": "done", "flags": choice.hotspot})
+        return self.client.post(url, {"outcome": choice.hotspot})
+
+    def results(self, number, level):
+        return self.client.get(reverse("cybergame:results", args=[number, level]))
+
+    def test_a_perfect_beginner_run_earns_cyber_scout(self):
+        player = self.play_as_new_player()
+        self.play_track(3, "beginner")
+        page = self.results(3, "beginner")
+        self.assertContains(page, "You earned the Cyber Scout badge!")
+        self.assertEqual(list(player.awards.values_list("badge", flat=True)), ["scout"])
+
+    def test_tablet_levels_earn_warrior_and_wizard(self):
+        player = self.play_as_new_player()
+        self.play_track(5, "intermediate")
+        self.assertContains(self.results(5, "intermediate"), "Cyber Warrior")
+        self.play_track(GIRL_SCOUTS, "advanced")
+        self.assertContains(self.results(GIRL_SCOUTS, "advanced"), "Cyber Wizard")
+        self.assertEqual(sorted(player.awards.values_list("badge", flat=True)), ["warrior", "wizard"])
+
+    def test_one_mistake_means_no_badge_even_after_fixing_it(self):
+        player = self.play_as_new_player()
+        self.play_track(4, "beginner", miss={2})
+        page = self.results(4, "beginner")
+        self.assertNotContains(page, "You earned")
+        self.assertContains(page, "needs every round right on the first try")
+        self.assertFalse(player.awards.exists())
+
+    def test_another_grade_is_a_fresh_chance_and_the_badge_is_earned_once(self):
+        player = self.play_as_new_player()
+        self.play_track(4, "beginner", miss={0})
+        self.results(4, "beginner")
+        self.play_track(3, "beginner")
+        self.assertContains(self.results(3, "beginner"), "You earned the Cyber Scout badge!")
+        self.play_track(5, "beginner")
+        page = self.results(5, "beginner")
+        self.assertNotContains(page, "You earned")
+        self.assertContains(page, "You have the")
+        self.assertEqual(player.awards.count(), 1)
+
+    def test_unfinished_track_earns_nothing(self):
+        player = self.play_as_new_player()
+        track = Track.objects.get(grade__number=3, difficulty="beginner")
+        scene = track.scenarios.get(order=0)
+        self.client.post(reverse("cybergame:question", args=[3, "beginner", 0]),
+                         {"choice": scene.choices.get(points=2).pk})
+        self.results(3, "beginner")
+        self.assertFalse(player.awards.exists())
+
+    def test_certificate_shows_the_squad_name_and_a_blank_for_a_real_name(self):
+        player = self.play_as_new_player()
+        self.play_track(3, "beginner")
+        self.results(3, "beginner")
+        page = self.client.get(reverse("cybergame:certificate", args=["scout"]))
+        self.assertContains(page, player.handle)
+        self.assertContains(page, "Grade 3 · Beginner")
+        self.assertContains(page, "write it in after you print")
+
+    def test_certificate_only_for_the_player_who_earned_it(self):
+        self.play_as_new_player()
+        self.assertEqual(self.client.get(reverse("cybergame:certificate", args=["scout"])).status_code, 404)
+        self.assertEqual(self.client.get(reverse("cybergame:certificate", args=["nope"])).status_code, 404)
+
+    def test_my_badges_page_and_leaderboard_show_earned_badges(self):
+        self.play_as_new_player()
+        page = self.client.get(reverse("cybergame:my_badges"))
+        self.assertContains(page, "0 of 3 earned")
+        self.play_track(3, "beginner")
+        self.results(3, "beginner")
+        self.assertContains(self.client.get(reverse("cybergame:my_badges")), "1 of 3 earned")
+        self.assertContains(self.client.get(reverse("cybergame:leaderboard")), 'class="board-badge"')
+
+    def test_badge_names_dont_clash_with_rank_names(self):
+        from .badges import BADGES
+        from .views import RANKS
+        self.assertFalse({b["name"] for b in BADGES} & {name for _, name, _ in RANKS})

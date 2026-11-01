@@ -32,4 +32,8 @@ urlpatterns = [
 
     # 6. leaderboard
     path("leaderboard/", views.leaderboard, name="leaderboard"),
+
+    # 7. no-mistakes badges, and a certificate to print
+    path("badges/", views.my_badges, name="my_badges"),
+    path("badges/<slug:slug>/print/", views.certificate, name="certificate"),
 ]

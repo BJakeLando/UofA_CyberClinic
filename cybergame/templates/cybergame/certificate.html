@@ -1,0 +1,46 @@
+{% extends "cybergame/base.html" %}
+
+{% block title %}{{ b.name }} certificate — Cyber Squad{% endblock %}
+
+{% block content %}
+{% comment %}
+  Printable certificate. The only thing about the child on it is the generated
+  squad name. The "Your name" line is blank on purpose: it gets filled in by
+  hand, on paper, so a real name never enters the game. Print styles in
+  style.css turn this into one landscape page.
+{% endcomment %}
+<div class="cert-tools no-print">
+  <a class="btn-back" href="{% url 'cybergame:my_badges' %}">← My badges</a>
+  <button type="button" class="btn btn-go" id="print-cert">🖨️ Print</button>
+</div>
+
+<article class="cert" style="--c1: {{ b.ribbon }}; --c2: {{ b.rim2 }}; --c3: {{ b.core2 }}">
+  <div class="cert-frame">
+    <p class="cert-kicker">Cyber Squad · Certificate of Achievement</p>
+
+    <div class="cert-main">
+      <div class="cert-medal">{% include "cybergame/_badge.html" with b=b uid="cert" %}</div>
+      <div class="cert-text">
+        <p class="cert-small">This certifies that</p>
+        <p class="cert-handle"><span aria-hidden="true">{{ player.avatar }}</span> {{ player.handle }}</p>
+        <p class="cert-small">has earned the rank of</p>
+        <h1 class="cert-title">{{ b.name }}</h1>
+        <p class="cert-motto">“{{ b.motto }}”</p>
+        <p class="cert-why">for finishing every round of <strong>{{ where }}</strong> with no mistakes.</p>
+      </div>
+    </div>
+
+    <div class="cert-foot">
+      <div class="cert-line"><span class="cert-fill"></span><small>Your name (write it in after you print)</small></div>
+      <div class="cert-line"><span class="cert-fill cert-date">{{ award.earned_at|date:"F j, Y" }}</span><small>Date earned</small></div>
+      <div class="cert-line"><span class="cert-fill"></span><small>Teacher or family member</small></div>
+    </div>
+
+    <p class="cert-rule">Stop &nbsp;·&nbsp; Don't reply &nbsp;·&nbsp; Tell a family member or teacher</p>
+  </div>
+</article>
+
+<script>
+  document.getElementById("print-cert").addEventListener("click", function () { window.print(); });
+</script>
+{% endblock %}

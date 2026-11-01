@@ -70,7 +70,7 @@ CONTENT = [
                 ("🙋", TELL, 2, "Great job! That is the best move."),
                 ("📛", "Tell my name", 0, "Keep your real name private in games."),
             ]),
-            S("chat", "Want to meet me at the park?", sender="BlockBuddy", sender_emoji="🧸", choices=[
+            S("chat", "Want to meet me at the park?", sender="BlockBuddy764", sender_emoji="🧸", choices=[
                 ("🙋", TELL, 2, "Yes! Don't answer them. Just tell."),
                 ("🚶", "Go meet them", 0, "Never go meet someone from a game."),
             ]),

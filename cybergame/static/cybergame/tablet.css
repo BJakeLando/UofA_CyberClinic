@@ -986,6 +986,68 @@
 .end-title { font-size: 24px; font-weight: 700; }
 .end-sub { color: var(--ink-2); font-size: 14px; }
 
+/* a game's own message box: "Report sent", "BlockBuddy764 is blocked" */
+.notice {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(340px, calc(100% - 24px));
+  transform: translate(-50%, -50%);
+  padding: 12px 16px 14px;
+  border: 3px solid #c9a25a;
+  border-radius: 12px;
+  background: linear-gradient(#3a2b18, #24190c);
+  color: #f3e7c9;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  text-align: center;
+  animation: tab-pop 0.25s ease-out;
+}
+
+.notice-head { display: flex; align-items: center; justify-content: center; gap: 6px; color: #c9a25a; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+.notice-icon { font-size: 16px; }
+.notice-title { margin: 6px 0 4px; color: #fff; font-size: 1.2em; font-weight: 700; }
+.notice-text { margin: 4px 0; font-size: 0.92em; line-height: 1.35; }
+
+.notice-ok {
+  margin-top: 8px;
+  padding: 7px 32px;
+  border: 2px solid #c9a25a;
+  border-radius: 8px;
+  background: #6b4f2a;
+  color: #fff !important;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notice-ok:active { background: #8a6a3a; }
+
+/* "+1 ⭐": a partial step counted */
+.tab-pop {
+  position: absolute;
+  top: 34px;
+  right: 12px;
+  z-index: 26;
+  padding: 6px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  background: var(--sun);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  font-family: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.8);
+  transition: opacity 0.2s, transform 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+  pointer-events: none;
+}
+
+.tab-pop.is-on { opacity: 1; transform: none; }
+
+.tab-finish.is-ready { background: var(--sun); animation: tab-throb 1.4s ease-in-out infinite; }
+
 /* notification banner */
 .tab-banner { position: absolute; top: 26px; left: 8px; right: 8px; z-index: 15; display: flex; justify-content: center; pointer-events: none; }
 

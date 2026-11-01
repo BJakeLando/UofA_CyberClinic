@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import (Choice, Classroom, Completion, Grade, Player,
+from .models import (Award, Choice, Classroom, Completion, Grade, Player,
                      Scenario, Track)
 
 
@@ -48,3 +48,10 @@ class PlayerAdmin(admin.ModelAdmin):
 class CompletionAdmin(admin.ModelAdmin):
     list_display = ("player", "scenario", "points", "best_possible", "attempts")
     list_filter = ("scenario__grade", "scenario__track__difficulty")
+
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    list_display = ("player", "badge", "track", "earned_at")
+    list_filter = ("badge",)
+    readonly_fields = ("earned_at",)

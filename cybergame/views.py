@@ -1,9 +1,10 @@
 from django.db.models import Sum
 from django.shortcuts import render, redirect, get_object_or_404
 
+from . import badges as B
 from .handles import (AVATARS, is_known_avatar, make_handle,
                       make_room_code, normalise_code)
-from .models import Classroom, Completion, Grade, Player, Track
+from .models import Award, Classroom, Completion, Grade, Player, Track
 
 # One friendly animal per grade, shown on the grade buttons
 GRADE_BUDDIES = {3: "🐢", 4: "🦊", 5: "🦉", 6: "🦁"}
@@ -28,7 +29,7 @@ TRACK_LOOK = {
 # Ranks a player climbs as points add up.
 RANKS = [
     (0,   "Cyber Cadet",   "🌱"),
-    (25,  "Cyber Scout",   "🔎"),
+    (25,  "Cyber Ranger",  "🔎"),
     (60,  "Cyber Guard",   "🛡️"),
     (110, "Cyber Hero",    "⭐"),
     (180, "Cyber Legend",  "👑"),
@@ -394,9 +395,12 @@ def start_track(request, number, difficulty):
 
     grade, track = _get_track(number, difficulty)
     scens = _scenarios(track)
+    badge = B.BY_LEVEL.get(track.difficulty)
     return render(request, "cybergame/start.html",
                   {"grade": grade, "track": track,
                    "buddy": buddy_for(grade),
+                   "badge": badge,
+                   "have_badge": badge and player.awards.filter(badge=badge["slug"]).exists(),
                    "total": len(scens),
                    "earned": _track_points(player, track),
                    "possible": sum(_best_points(s) for s in scens),
@@ -517,6 +521,9 @@ def results(request, number, difficulty):
     stars = 3 if ratio >= 0.85 else 2 if ratio >= 0.6 else 1
     missed = _missed_indexes(player, scenarios)
 
+    # No-mistakes badge: awarded here, the first time a track comes back perfect
+    award, new_badge = B.check_award(player, track)
+
     return render(request, "cybergame/results.html",
                   {"grade": grade, "track": track, "score": score,
                    "total_possible": total_possible, "stars": stars,
@@ -525,7 +532,46 @@ def results(request, number, difficulty):
                    "rules": RULES,
                    "missed_count": len(missed),
                    "perfect": not missed,
+                   "badge": B.BY_LEVEL.get(track.difficulty),
+                   "award": award,
+                   "new_badge": new_badge,
+                   "first_try_misses": B.mistakes(player, track),
                    **_player_context(player)})
+
+
+# --------------------------------------------------------------------------
+# badges
+# --------------------------------------------------------------------------
+
+def my_badges(request):
+    """All three badges: earned ones in colour with a print button."""
+    player = current_player(request)
+    if player is None:
+        return _needs_player(request)
+    shelf = B.player_badges(player)
+    for b in shelf:
+        if b["award"]:
+            b["where"] = B.where_earned(b["award"])
+    return render(request, "cybergame/badges.html",
+                  {"shelf": shelf, "earned": sum(1 for b in shelf if b["award"]),
+                   **_player_context(player)})
+
+
+def certificate(request, slug):
+    """A printable certificate for a badge this browser's player earned.
+
+    Shows the generated squad name and nothing else about the child. There
+    is a blank line to write a real name on AFTER printing, so a name never
+    enters the game. Only the player who earned it can open it: the page is
+    looked up through the session, never by a handle in the address.
+    """
+    player = current_player(request)
+    if player is None:
+        return _needs_player(request)
+    award = get_object_or_404(Award, player=player, badge=slug)
+    return render(request, "cybergame/certificate.html",
+                  {"b": B.BY_SLUG[slug], "award": award,
+                   "where": B.where_earned(award), "player": player})
 
 
 # --------------------------------------------------------------------------
@@ -549,11 +595,16 @@ def leaderboard(request):
     # One indexed scan over a single room, never a global sort.
     top = list(Player.objects.filter(classroom=room)[:20]) if (player or room) else []
 
+    earned = {}
+    for a in Award.objects.filter(player__in=top):
+        earned.setdefault(a.player_id, set()).add(a.badge)
+
     rows = []
     for i, p in enumerate(top, start=1):
         name, emoji = rank_for(p.total_points)
         rows.append({"place": i, "player": p, "rank_name": name,
-                     "rank_emoji": emoji, "is_me": player and p.pk == player.pk})
+                     "rank_emoji": emoji, "is_me": player and p.pk == player.pk,
+                     "badges": [b for b in B.BADGES if b["slug"] in earned.get(p.pk, ())]})
 
     me_in_top = any(r["is_me"] for r in rows)
     context = {"rows": rows, "me_in_top": me_in_top,

@@ -25,7 +25,9 @@
       <span class="board-place">{{ r.place }}</span>
       <span class="board-avatar" aria-hidden="true">{{ r.player.avatar }}</span>
       <span class="board-body">
-        <span class="board-handle">{{ r.player.handle }}{% if r.is_me %} <em>(you)</em>{% endif %}</span>
+        <span class="board-handle">{{ r.player.handle }}{% if r.is_me %} <em>(you)</em>{% endif %}
+          {% for b in r.badges %}<span class="board-badge" title="{{ b.name }}">{% include "cybergame/_badge.html" with b=b uid=forloop.parentloop.counter %}</span>{% endfor %}
+        </span>
         <span class="board-rank">{{ r.rank_emoji }} {{ r.rank_name }}</span>
       </span>
       <span class="board-points">⭐ {{ r.player.total_points }}</span>
@@ -65,6 +67,7 @@
     <a class="btn btn-ghost" href="{% url 'cybergame:teacher' %}">Rooms</a>
   {% else %}
     <a class="btn btn-go" href="{% url 'cybergame:grade_select' %}">Keep playing</a>
+    <a class="btn btn-next" href="{% url 'cybergame:my_badges' %}">🏅 My badges</a>
   {% endif %}
 </div>
 {% endblock %}
