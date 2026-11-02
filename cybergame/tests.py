@@ -333,6 +333,15 @@ class BadgeTests(SeededTestCase):
         self.assertContains(page, "Grade 3 · Beginner")
         self.assertContains(page, "write it in after you print")
 
+    def test_ownership_notice_on_pages_and_certificate(self):
+        notice = "© 2026 Lando Technologies LLC"
+        self.play_as_new_player()
+        self.assertContains(self.client.get(reverse("cybergame:grade_select")), notice)
+        self.play_track(3, "beginner")
+        self.results(3, "beginner")
+        page = self.client.get(reverse("cybergame:certificate", args=["scout"]))
+        self.assertContains(page, f'<p class="cert-legal">{notice}</p>', html=True)
+
     def test_certificate_only_for_the_player_who_earned_it(self):
         self.play_as_new_player()
         self.assertEqual(self.client.get(reverse("cybergame:certificate", args=["scout"])).status_code, 404)

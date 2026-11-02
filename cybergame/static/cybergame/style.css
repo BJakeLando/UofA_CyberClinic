@@ -1693,6 +1693,13 @@ button:focus-visible {
 .cert-line small { margin-top: 0.5cqw; color: var(--ink-2); font-size: 1.45cqw; }
 .cert-rule { margin: 1.6cqw 0 0; color: var(--c1); font-size: 1.75cqw; font-weight: 700; letter-spacing: 0.2cqw; text-align: center; text-transform: uppercase; }
 
+/* Ownership notice: tiny and quiet, tucked into the certificate's bottom edge. */
+.cert { position: relative; }
+.cert-legal { position: absolute; right: 5cqw; bottom: 0.15cqw; margin: 0; color: var(--ink-2); font-size: 0.95cqw; opacity: 0.6; }
+
+/* Site-wide notice under every page. Small and muted so kids never notice it. */
+.legal { padding: 0 18px 18px; color: var(--ink-2); font-size: 11px; opacity: 0.55; text-align: center; }
+
 @media (max-width: 560px) {
   .cert { aspect-ratio: auto; }
   .cert-main { flex-direction: column; gap: 2cqw; }
