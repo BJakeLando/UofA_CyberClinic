@@ -12,7 +12,8 @@
   --grape: #7a5cff;
   --ocean: #2f8fe8;
   --ember: #ff8a3d;
-  --forest: #1f7a4d;   /* groups; white text on it is 5.3:1 */
+  --forest: #1f7a4d;   /* Girl Scouts; white text on it is 5.3:1 */
+  --lake:   #24589e;   /* Boy Scouts; white text on it is 7.1:1 */
 
   --line: 4px solid var(--ink);
   --drop: 6px 6px 0 var(--ink);
@@ -140,10 +141,13 @@ body {
 .group-name  { font-size: 36px; font-weight: 700; line-height: 1.05; }
 
 .group-girl-scouts { background: var(--forest); color: var(--cloud); }
+.group-boy-scouts  { background: var(--lake);   color: var(--cloud); }
 
 /* inside the game: the chat and voice screens pick up the group's colour */
 .theme-girl-scouts .screen-bar { background: var(--forest); }
 .theme-girl-scouts .msg-name   { color: var(--forest); }
+.theme-boy-scouts .screen-bar  { background: var(--lake); }
+.theme-boy-scouts .msg-name    { color: var(--lake); }
 
 .empty { grid-column: 1 / -1; text-align: center; }
 
@@ -470,10 +474,16 @@ body {
 .result-actions,
 .done-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 16px;
   margin-top: 20px;
+}
+
+/* phones: two buttons side by side must fit, never spill off the edge */
+@media (max-width: 480px) {
+  .done-actions .btn { padding: 14px 20px; font-size: 22px; }
 }
 
 @keyframes pop {
@@ -968,7 +978,8 @@ button:focus-visible {
    Leaderboard
    ========================================================================== */
 
-.board { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+/* minmax(0, 1fr): long handles shrink with an ellipsis instead of widening the page */
+.board { list-style: none; margin: 0 0 18px; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
 
 .board-row,
 .board-you {

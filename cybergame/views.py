@@ -10,7 +10,7 @@ from .models import Award, Classroom, Completion, Grade, Player, Track
 GRADE_BUDDIES = {3: "🐢", 4: "🦊", 5: "🦉", 6: "🦁"}
 
 # Groups get a picture by theme instead (Grade.theme)
-GROUP_BUDDIES = {"girl-scouts": "🏕️"}
+GROUP_BUDDIES = {"girl-scouts": "🏕️", "boy-scouts": "🧭"}
 
 
 def buddy_for(grade):

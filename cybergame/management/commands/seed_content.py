@@ -250,14 +250,27 @@ SCOUTS = [
     ]),
 ]
 
+# Boy Scouts plays the same rounds as Girl Scouts. The one change: their
+# fundraiser is popcorn, not cookies, so the fake buyer asks about popcorn.
+POPCORN = S("chat", "I want to buy 10 tins of popcorn! What's your home address?", sender="PopcornFan", sender_emoji="🍿", stage="recognize", choices=[
+    ("🏠", "Send my address", 0, "Never share your address online."),
+    ("🙋", TELL, 2, "Perfect! Your family can handle popcorn orders."),
+])
+BOY_SCOUTS = [POPCORN if s["sender"] == "CookieFan" else s for s in SCOUTS]
+
 # Group numbers start at 100 so they never collide with a grade (see Grade).
 # Girl Scouts found the worded questions too easy to guess, so they get the
-# tablet levels too.
+# tablet levels too. Boy Scouts gets the same three levels.
 GROUPS = [
     {
         "number": 100, "label": "Girl Scouts",
         "intro": "Trail friends, troop chats and cookie sales. Spot the tricks!",
         "tracks": {"beginner": SCOUTS, "intermediate": TABLET, "advanced": TABLET},
+    },
+    {
+        "number": 101, "label": "Boy Scouts",
+        "intro": "Trail friends, troop chats and popcorn sales. Spot the tricks!",
+        "tracks": {"beginner": BOY_SCOUTS, "intermediate": TABLET, "advanced": TABLET},
     },
 ]
 

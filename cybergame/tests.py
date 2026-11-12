@@ -10,6 +10,7 @@ from .models import Choice, Completion, Grade, Player, Scenario, Track
 from .tablet_content import ROUNDS
 
 GIRL_SCOUTS = 100
+BOY_SCOUTS = 101
 GRADES = [3, 4, 5, 6, GIRL_SCOUTS]
 
 
@@ -218,6 +219,48 @@ class GirlScoutsTests(SeededTestCase):
         page = self.client.get(url)
         self.assertContains(page, "theme-girl-scouts")
         best = Track.objects.get(grade__number=GIRL_SCOUTS, difficulty="beginner") \
+            .scenarios.get(order=0).choices.get(points=2)
+        self.client.post(url, {"choice": best.pk})
+        player.refresh_from_db()
+        self.assertEqual(player.total_points, 2)
+
+
+class BoyScoutsTests(SeededTestCase):
+    """Same rounds as Girl Scouts, with popcorn in place of cookies."""
+
+    def prompts(self, number, level):
+        track = Track.objects.get(grade__number=number, difficulty=level)
+        return [s.prompt for s in track.scenarios.order_by("order")]
+
+    def test_is_a_group_with_all_three_levels(self):
+        group = Grade.objects.get(number=BOY_SCOUTS)
+        self.assertTrue(group.is_group)
+        self.assertEqual(group.title, "Boy Scouts")
+        self.assertEqual([t.difficulty for t in group.tracks.all()],
+                         ["beginner", "intermediate", "advanced"])
+
+    def test_beginner_matches_girl_scouts_except_popcorn(self):
+        girls = self.prompts(GIRL_SCOUTS, "beginner")
+        boys = self.prompts(BOY_SCOUTS, "beginner")
+        self.assertEqual(len(boys), len(girls))
+        changed = [(g, b) for g, b in zip(girls, boys) if g != b]
+        self.assertEqual(len(changed), 1)
+        self.assertIn("cookies", changed[0][0])
+        self.assertIn("popcorn", changed[0][1])
+        self.assertNotIn("cookie", " ".join(boys).lower())
+
+    def test_tablet_levels_match_girl_scouts(self):
+        for level in ("intermediate", "advanced"):
+            self.assertEqual(self.prompts(BOY_SCOUTS, level), self.prompts(GIRL_SCOUTS, level))
+
+    def test_shows_on_the_picker_and_plays_with_its_own_colours(self):
+        player = self.play_as_new_player()
+        picker = self.client.get(reverse("cybergame:grade_select"))
+        self.assertContains(picker, "Boy Scouts")
+        self.assertContains(picker, "group-boy-scouts")
+        url = reverse("cybergame:question", args=[BOY_SCOUTS, "beginner", 0])
+        self.assertContains(self.client.get(url), "theme-boy-scouts")
+        best = Track.objects.get(grade__number=BOY_SCOUTS, difficulty="beginner") \
             .scenarios.get(order=0).choices.get(points=2)
         self.client.post(url, {"choice": best.pk})
         player.refresh_from_db()

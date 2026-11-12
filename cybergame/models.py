@@ -3,7 +3,7 @@ from django.utils.text import slugify
 
 
 class Grade(models.Model):
-    """A school grade (3rd-6th), or a group like a Girl Scout troop.
+    """A school grade (3rd-6th), or a group like a Girl Scout or Boy Scout troop.
 
     Groups ride on the same tables and URLs as grades, so they still need a
     number: every URL is keyed on it. Group numbers start at 100, which keeps
@@ -15,7 +15,7 @@ class Grade(models.Model):
         GROUP = "group", "Group"
 
     number = models.PositiveSmallIntegerField(unique=True)   # 3-6, groups 100+
-    label = models.CharField(max_length=40)                  # "3rd Grade", "Girl Scouts"
+    label = models.CharField(max_length=40)                  # "3rd Grade", "Girl Scouts", "Boy Scouts"
     intro = models.TextField(blank=True)
     order = models.PositiveSmallIntegerField(default=0)
     kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.GRADE)
