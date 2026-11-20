@@ -403,3 +403,20 @@ class BadgeTests(SeededTestCase):
         from .badges import BADGES
         from .views import RANKS
         self.assertFalse({b["name"] for b in BADGES} & {name for _, name, _ in RANKS})
+
+
+class ProductionHostTests(SeededTestCase):
+    """Both the original railway.app link and the custom domain must load."""
+
+    def test_every_production_address_is_served(self):
+        from django.conf import settings
+        for host in ("web-production-0238.up.railway.app", "www.cybersquadgame.com", "cybersquadgame.com"):
+            with self.subTest(host=host):
+                self.assertIn(host, settings.ALLOWED_HOSTS)
+                self.assertIn(f"https://{host}", settings.CSRF_TRUSTED_ORIGINS)
+                page = self.client.get("/", HTTP_HOST=host, secure=True, follow=True)
+                self.assertEqual(page.status_code, 200)
+
+    def test_unknown_hosts_are_still_refused(self):
+        page = self.client.get("/", HTTP_HOST="evil.example.com", secure=True)
+        self.assertEqual(page.status_code, 400)

@@ -40,6 +40,19 @@ if CUSTOM_DOMAIN:
     ALLOWED_HOSTS.append(CUSTOM_DOMAIN)
     CSRF_TRUSTED_ORIGINS.append(f"https://{CUSTOM_DOMAIN}")
 
+# Production addresses, listed outright so they never depend on Railway's
+# variables. RAILWAY_PUBLIC_DOMAIN can switch to the custom domain once one is
+# added, which would quietly lock out the railway.app link people already use.
+PRODUCTION_HOSTS = [
+    "web-production-0238.up.railway.app",  # the original link: keep it working
+    "www.cybersquadgame.com",
+    "cybersquadgame.com",  # GoDaddy forwards this to www, but allow it anyway
+]
+for host in PRODUCTION_HOSTS:
+    if host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(host)
+        CSRF_TRUSTED_ORIGINS.append(f"https://{host}")
+
 
 # Application definition
 
