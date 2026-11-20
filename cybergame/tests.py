@@ -405,6 +405,19 @@ class BadgeTests(SeededTestCase):
         self.assertFalse({b["name"] for b in BADGES} & {name for _, name, _ in RANKS})
 
 
+class PrivacyPageTests(SeededTestCase):
+    def test_names_the_operator_and_how_to_reach_them(self):
+        page = self.client.get(reverse("cybergame:privacy"))
+        self.assertContains(page, "Lando Technologies, LLC")
+        self.assertContains(page, 'href="mailto:hello@cybersquadgame.com"')
+        self.assertContains(page, 'href="tel:+15203309120"')
+
+    def test_no_draft_placeholders_ship(self):
+        page = self.client.get(reverse("cybergame:privacy"))
+        self.assertNotContains(page, "[[")
+        self.assertNotContains(page, "CONFIRM BEFORE PUBLISHING")
+
+
 class ProductionHostTests(SeededTestCase):
     """Both the original railway.app link and the custom domain must load."""
 
