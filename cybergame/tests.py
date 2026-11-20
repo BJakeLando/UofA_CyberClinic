@@ -406,11 +406,13 @@ class BadgeTests(SeededTestCase):
 
 
 class PrivacyPageTests(SeededTestCase):
+    """The contact number is a Google Voice line, not a personal cell."""
+
     def test_names_the_operator_and_how_to_reach_them(self):
         page = self.client.get(reverse("cybergame:privacy"))
         self.assertContains(page, "Lando Technologies, LLC")
         self.assertContains(page, 'href="mailto:hello@cybersquadgame.com"')
-        self.assertContains(page, 'href="tel:+15203309120"')
+        self.assertContains(page, 'href="tel:+16502651193"')
 
     def test_no_draft_placeholders_ship(self):
         page = self.client.get(reverse("cybergame:privacy"))
