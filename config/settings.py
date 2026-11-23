@@ -35,6 +35,10 @@ if RAILWAY_DOMAIN:
     ALLOWED_HOSTS.append(RAILWAY_DOMAIN)
     CSRF_TRUSTED_ORIGINS.append(f"https://{RAILWAY_DOMAIN}")
 
+# Rooms nobody joins or plays in for this many days are deleted, with their
+# squads and progress (see cybergame/retention.py and the privacy page).
+ROOM_RETENTION_DAYS = int(os.environ.get("ROOM_RETENTION_DAYS", "30"))
+
 CUSTOM_DOMAIN = os.environ.get("CUSTOM_DOMAIN")
 if CUSTOM_DOMAIN:
     ALLOWED_HOSTS.append(CUSTOM_DOMAIN)

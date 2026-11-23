@@ -5,6 +5,7 @@ from . import badges as B
 from .handles import (AVATARS, is_known_avatar, make_handle,
                       make_room_code, normalise_code)
 from .models import Award, Classroom, Completion, Grade, Player, Track
+from .retention import maybe_purge, retention_days
 
 # One friendly animal per grade, shown on the grade buttons
 GRADE_BUDDIES = {3: "🐢", 4: "🦊", 5: "🦉", 6: "🦁"}
@@ -216,7 +217,7 @@ def privacy(request):
     Every claim on that page is checked against this code. If the app starts
     collecting something new, the page is wrong until it is updated.
     """
-    return render(request, "cybergame/privacy.html", {})
+    return render(request, "cybergame/privacy.html", {"retention_days": retention_days()})
 
 
 def pending_room(request):
@@ -252,6 +253,7 @@ def join_room(request):
     """Type the code the teacher put on the board."""
     error = None
     if request.method == "POST":
+        maybe_purge()
         code = normalise_code(request.POST.get("code"))
         room = Classroom.objects.filter(code=code, active=True).first()
         if room:
@@ -269,11 +271,13 @@ def play_solo(request):
 def teacher(request):
     """Make a room, and get the code back afterwards."""
     if request.method == "POST":
+        maybe_purge()
         label = (request.POST.get("label") or "").strip()[:60]
         taken = set(Classroom.objects.values_list("code", flat=True))
         room = Classroom.objects.create(code=make_room_code(taken), label=label)
         remember_room(request, room)
-        return render(request, "cybergame/room_made.html", {"room": room})
+        return render(request, "cybergame/room_made.html",
+                      {"room": room, "retention_days": retention_days()})
     return render(request, "cybergame/teacher.html", {"my_rooms": my_rooms(request)})
 
 

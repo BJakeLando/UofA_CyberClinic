@@ -16,6 +16,11 @@
     as long as you're on this device.
   </p>
 
+  <p class="panel-line rooms-note">
+    The room, and every squad name and score in it, is deleted automatically
+    after {{ retention_days }} days without anyone joining or playing.
+  </p>
+
   <div class="result-actions">
     <button type="button" class="say-btn" data-scope="#made" aria-label="Read out loud">🔊</button>
     <a class="btn btn-ghost" href="{% url 'cybergame:leaderboard' %}?room={{ room.code }}">Live board</a>

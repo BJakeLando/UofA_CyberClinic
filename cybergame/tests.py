@@ -435,3 +435,99 @@ class ProductionHostTests(SeededTestCase):
     def test_unknown_hosts_are_still_refused(self):
         page = self.client.get("/", HTTP_HOST="evil.example.com", secure=True)
         self.assertEqual(page.status_code, 400)
+
+
+class RoomRetentionTests(SeededTestCase):
+    """Rooms nobody uses for ROOM_RETENTION_DAYS are deleted with everything in them."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+
+    def make_room(self, code, days_old, squad_days_old=None, played_days_old=None):
+        from datetime import timedelta
+        from django.utils import timezone
+        from .models import Award, Classroom
+        now = timezone.now()
+        room = Classroom.objects.create(code=code, label=f"Room {code}")
+        Classroom.objects.filter(pk=room.pk).update(created_at=now - timedelta(days=days_old))
+        if squad_days_old is not None:
+            squad = Player.objects.create(classroom=room, handle=f"Fox{code}", avatar="🦊", total_points=2)
+            Player.objects.filter(pk=squad.pk).update(created_at=now - timedelta(days=squad_days_old))
+            Award.objects.create(player=squad, badge="scout")
+            if played_days_old is not None:
+                scene = Scenario.objects.filter(track__difficulty="beginner").first()
+                comp = Completion.objects.create(player=squad, scenario=scene, points=2, best_possible=2)
+                Completion.objects.filter(pk=comp.pk).update(updated_at=now - timedelta(days=played_days_old))
+        return room
+
+    def test_unused_room_is_deleted_with_its_squads_progress_and_badges(self):
+        from .models import Award, Classroom
+        from .retention import purge_stale_rooms
+        room = self.make_room("111111", days_old=45, squad_days_old=45, played_days_old=40)
+        squad_ids = list(room.players.values_list("pk", flat=True))
+        self.assertEqual(purge_stale_rooms(), (1, 1))
+        self.assertFalse(Classroom.objects.filter(pk=room.pk).exists())
+        self.assertFalse(Player.objects.filter(pk__in=squad_ids).exists())
+        self.assertFalse(Completion.objects.filter(player_id__in=squad_ids).exists())
+        self.assertFalse(Award.objects.filter(player_id__in=squad_ids).exists())
+
+    def test_rooms_still_in_use_are_kept(self):
+        from .models import Classroom
+        from .retention import purge_stale_rooms
+        keep = [
+            self.make_room("222222", days_old=2),                                       # brand new
+            self.make_room("333333", days_old=60, squad_days_old=3),                    # someone just joined
+            self.make_room("444444", days_old=60, squad_days_old=60, played_days_old=5),  # still playing
+        ]
+        gone = self.make_room("555555", days_old=31)                                    # made, never used
+        self.assertEqual(purge_stale_rooms(), (1, 0))
+        self.assertEqual(set(Classroom.objects.values_list("code", flat=True)) & {"222222", "333333", "444444", "555555"},
+                         {r.code for r in keep})
+        self.assertFalse(Classroom.objects.filter(pk=gone.pk).exists())
+
+    def test_solo_players_are_not_touched(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from .retention import purge_stale_rooms
+        solo = Player.objects.create(handle="SoloOwl9", avatar="🦉")
+        Player.objects.filter(pk=solo.pk).update(created_at=timezone.now() - timedelta(days=400))
+        purge_stale_rooms()
+        self.assertTrue(Player.objects.filter(pk=solo.pk).exists())
+
+    def test_window_follows_the_setting(self):
+        from .models import Classroom
+        from .retention import purge_stale_rooms
+        room = self.make_room("666666", days_old=10)
+        with override_settings(ROOM_RETENTION_DAYS=7):
+            purge_stale_rooms()
+        self.assertFalse(Classroom.objects.filter(pk=room.pk).exists())
+
+    def test_deploy_command_reports_what_it_deleted(self):
+        from io import StringIO
+        self.make_room("777777", days_old=90, squad_days_old=90)
+        out = StringIO()
+        call_command("purge_rooms", stdout=out)
+        self.assertIn("Deleted 1 unused room(s) and 1 squad(s) after 30 days without use.", out.getvalue())
+
+    def test_making_or_joining_a_room_purges_at_most_every_few_hours(self):
+        from .models import Classroom
+        old = self.make_room("888888", days_old=50)
+        self.client.post(reverse("cybergame:teacher"), {"label": "Ms. Lee"})
+        self.assertFalse(Classroom.objects.filter(pk=old.pk).exists())
+        again = self.make_room("999999", days_old=50)
+        self.client.post(reverse("cybergame:join_room"), {"code": "123456"})
+        self.assertTrue(Classroom.objects.filter(pk=again.pk).exists())  # throttled
+
+    def test_teachers_and_parents_are_told(self):
+        page = self.client.post(reverse("cybergame:teacher"), {"label": "Room 4"})
+        self.assertContains(page, "deleted automatically")
+        self.assertContains(page, "after 30 days without anyone joining or playing")
+        privacy = self.client.get(reverse("cybergame:privacy"))
+        self.assertContains(privacy, "goes 30 days without anyone joining or playing")
+
+    def test_deploys_run_the_purge(self):
+        from pathlib import Path
+        from django.conf import settings
+        procfile = (Path(settings.BASE_DIR) / "Procfile").read_text()
+        self.assertIn("python manage.py purge_rooms", procfile)
